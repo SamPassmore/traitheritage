@@ -66,13 +66,13 @@ slice_tree = function(tree, n_generations){
 
 
 ## Main function
-# tree = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
-# tree = ape::compute.brlen(tree)
-#
-# trait = c("a", "c", "c", "c")
-# names(trait) = c("tA", "tB", "tC", "tD")
-#
-# n_generations = 3
+tree = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
+tree = ape::compute.brlen(tree)
+
+trait = c("a", "c", "c", "c")
+names(trait) = c("tA", "tB", "tC", "tD")
+
+n_generations = 3
 
 trait_heritage = function(tree, trait, n_generations){
 
@@ -100,10 +100,8 @@ trait_heritage = function(tree, trait, n_generations){
   }
 
   # 3. Calculate the probability of a shared trait for each generation
-  xx = by(output[,c("numerator", "denominator")],output$generation, FUN=colSums)
-
   output_dt = data.table::data.table(output)
-  output_dt = output_dt[, .(numerator_sum = sum(numerator),
+  output_dt = output_dt[, list(numerator_sum = sum(numerator),
                 denominator_sum = sum(denominator)), by = generation]
   output_dt[, clade_probability := numerator_sum / denominator_sum]
 
