@@ -12,10 +12,14 @@ test_that("#2 Simple clade calculation works",{
   expect_equal(.clade_probabilities(clade_states), list(numerator = 1, denominator = 3))
 })
 
+test_that("#3 A clade with one taxa should return all zeros",{
+  clade_states = c("A")
+  names(clade_states) = c("t1")
+  expect_equal(.clade_probabilities(clade_states), list(numerator = 0, denominator = 0))
+})
+
 
 ## Tree cut tests
-
-
 
 test_that("#3 Simple tree cut test", {
   # make a fake tree
@@ -29,17 +33,11 @@ test_that("#3 Simple tree cut test", {
                                   "g_0.5", "g_0.5", "g_0.5"),
                    taxa = c("A", "B", "C", "D", "A",
                             "B", "C", "D"),
-                   clade = structure(
-                     c(1L, 2L, 3L, 4L, 1L, 1L, 2L,
-                       2L),
-                     levels = c("1", "2", "3", "4"),
-                     class = "factor"
-                   )
+                   clade = c(1, 2, 3, 4, 1, 1, 2, 2)
                  ),
-                 class = "data.frame",
-                 row.names = c(NA,-8L)
-               )
-  )
+                 row.names = c(NA,-8L),
+                 class = "data.frame"
+               ))
 })
 
 test_that("#4 Simple tree cut test", {
@@ -66,16 +64,23 @@ test_that("#4 Simple tree cut test", {
                    ),
                    taxa = c("A", "B", "C", "D", "A", "B", "C", "D", "A", "B",
                             "C", "D"),
-                   clade = structure(
-                     c(1L, 2L, 3L, 4L, 1L, 2L, 3L, 3L,
-                       1L, 2L, 2L, 2L),
-                     levels = c("1", "2", "3", "4"),
-                     class = "factor"
-                   )
+                   clade = c(1, 2, 3, 4, 1, 2, 3, 3, 1, 2, 2, 2)
                  ),
                  class = "data.frame",
                  row.names = c(NA,-12L)
                ))
+})
+
+## Main function tests
+
+test_that("#5 Full pipeline simple test", {
+  t = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
+  t = ape::compute.brlen(t)
+
+  trait = c("b", "a", "a", "a")
+  names(trait) = t$tip.label
+
+  trait_heritage(t, trait, n_generations = 2)
 })
 
 # plot(t)

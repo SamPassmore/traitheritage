@@ -18,7 +18,7 @@
     denominator = nrow(clade_pairs)
   } else {
     numerator = 0 # if there is only 1 individual in a clade, then the probability is 0
-    denominator = 1
+    denominator = 0
   }
   list(numerator = numerator, denominator = denominator)
 }
@@ -35,11 +35,11 @@
 slice_tree = function(tree, n_generations){
   # Calculate tree depth
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
-  root_depth = 0 # assumes that taxa start at 0.
+  root_depth = 0 # assumes that taxa start at 0. We make the first cut just above zoer
 
   bin_size = max_tree_depth / n_generations
 
-  cuts = c(root_depth, cumsum(
+  cuts = c(cumsum(
     rep(bin_size, n_generations)
   ))
 
@@ -66,6 +66,7 @@ slice_tree = function(tree, n_generations){
 
 
 ## Main function
+
 tree = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
 tree = ape::compute.brlen(tree)
 
@@ -106,6 +107,6 @@ trait_heritage = function(tree, trait, n_generations){
   output_dt[, clade_probability := numerator_sum / denominator_sum]
 
   # Return
-  output_dt
+  data.frame(output_dt)
 }
 
