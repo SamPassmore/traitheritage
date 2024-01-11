@@ -66,16 +66,19 @@ slice_tree = function(tree, n_generations){
 
 
 ## Main function
-
-tree = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
-tree = ape::compute.brlen(tree)
-
-trait = c("a", "c", "c", "c")
-names(trait) = c("tA", "tB", "tC", "tD")
-
-n_generations = 3
-
+#' Calculate the heritage of a trait along a single phylogeny
+#'
+#' @param tree a single phylogeny
+#' @param trait a vector of traits, named for each taxa
+#' @param n_generations the number of times to cut a tree and calculate the probability of trait heritage
+#'
+#' @return a dataframe containing the probability of shared languages within each generation
+#' @export
+#'
+#' @examples
 trait_heritage = function(tree, trait, n_generations){
+
+  ## Add argument tests to the function
 
   # 1. Calculate tree cuts
   clades = slice_tree(tree, n_generations)
