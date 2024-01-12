@@ -87,7 +87,9 @@ trait_heritage = function(tree, trait, n_generations){
   clades = dplyr::full_join(clades, data.frame(taxa = names(trait), trait = trait), by = "taxa")
 
   # 2. For each generation, calculate the probability of a shared trait within each clade
-  # Use lapply for generations and sapply for clade_sets too speed up loop
+  generations = unique(clades$generation)
+
+  # Use lapply for generations and sapply for clade_sets
   output <- lapply(generations, function(g) {
     generation_df <- clades[clades$generation == g, ]
     clade_sets <- unique(generation_df$clade)
