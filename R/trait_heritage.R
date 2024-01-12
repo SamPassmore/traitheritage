@@ -87,21 +87,28 @@ trait_heritage = function(tree, trait, n_generations){
   clades = dplyr::full_join(clades, data.frame(taxa = names(trait), trait = trait), by = "taxa")
 
   # 2. For each generation, calculate the probability of a shared trait within each clade
-  generations = unique(clades$generation)
-  output = unique(clades[,c("generation", "clade")])
-  output$numerator = NA
-  output$denominator = NA
-  for(i in seq_along(generations)){
-    generation_df = clades[clades$generation == generations[i],]
-    clade_sets = unique(generation_df$clade)
-    for(j in seq_along(clade_sets)){
-      trait_states = generation_df$trait[generation_df$clade == clade_sets[j]]
-      names(trait_states) = generation_df$taxa[generation_df$clade == clade_sets[j]]
-      cp = .clade_probabilities(clade_states = trait_states)
-      output[output$generation == generations[i] &
-               output$clade == clade_sets[j], c("numerator", "denominator")] = c(cp$numerator, cp$denominator)
-    }
-  }
+  # Use lapply for generations and sapply for clade_sets too speed up loop
+  output <- lapply(generations, function(g) {
+    generation_df <- clades[clades$generation == g, ]
+    clade_sets <- unique(generation_df$clade)
+
+    clade_result <- sapply(clade_sets, function(cs) {
+      trait_states <- generation_df$trait[generation_df$clade == cs]
+      names(trait_states) <- generation_df$taxa[generation_df$clade == cs]
+
+      .clade_probabilities(clade_states = trait_states)
+    })
+
+    # Combine clade result with generation and clade information
+    data.frame(
+      generation = g,
+      clade = clade_sets,
+      numerator = unlist(clade_result[1, ]),
+      denominator = unlist(clade_result[2, ]),
+      stringsAsFactors = FALSE
+    )
+  })
+  output = do.call(rbind, output)
 
   # 3. Calculate the probability of a shared trait for each generation
   output_dt = data.table::data.table(output)
