@@ -76,7 +76,6 @@
 trait_heritage = function(tree, trait, n_generations){
 
   ## Add argument tests to the function
-
   # 1. Calculate tree cuts
   clades = .slice_tree(tree, n_generations)
 
@@ -88,7 +87,8 @@ trait_heritage = function(tree, trait, n_generations){
 
   # Use lapply for generations and sapply for clade_sets
   output = lapply(generations, function(g) {
-    generation_df <- clades[clades$generation == g, ]
+    generation_df = as.data.table(clades)
+    generation_df = generation_df[generation == g]
     clade_sets <- unique(generation_df$clade)
 
     clade_result <- sapply(clade_sets, function(cs) {
