@@ -9,12 +9,10 @@
 .clade_probabilities = function(clade_states) {
 
   if(length(clade_states) > 1) {
-    clade_pairs = data.frame(t(combn(names(clade_states), 2)))
-    state_matches = apply(clade_pairs, 1,
-                          function(x)
-                            clade_states[x[1]] == clade_states[x[2]])
-    numerator = sum(state_matches)
-    denominator = nrow(clade_pairs)
+    x = as.numeric(factor(clade_states))
+    dd = 1 - c(dist(x, method = "manhattan"))
+    numerator = sum(dd)
+    denominator = length(dd)
   } else {
     numerator = 0 # if there is only 1 individual in a clade, then the probability is 0
     denominator = 0

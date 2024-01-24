@@ -159,3 +159,24 @@ profvis({
 ## Clade probabilities is slow
 
 profvis({.clade_probabilities(trait_states)}, rerun = TRUE)
+
+
+
+f1_comb = function() {
+  clade_pairs = data.frame(t(combn(names(clade_states), 2)))
+  state_matches = apply(clade_pairs, 1,
+                        function(x)
+                          clade_states[x[1]] == clade_states[x[2]])
+  numerator = sum(state_matches)
+  denominator = nrow(clade_pairs)
+  }
+
+f2_dist = function() {
+  x = match(clade_states, LETTERS[1:26])
+  dd = 1 - c(dist(x, method = "manhattan"))
+  numerator = sum(dd)
+  denominator = length(dd)
+}
+
+microbenchmark(f1_comb(), f2_dist(), times = 1000)
+
