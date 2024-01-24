@@ -26,16 +26,14 @@ test_that("#3 Simple tree cut test", {
   t = ape::read.tree(text = "((A,B),(C,D));")
   t = ape::compute.brlen(t)
 
-  expect_equal(slice_tree(t, 2),
+  expect_equal(.slice_tree(t, 2),
                structure(
                  list(
-                   generation = c("g_0", "g_0", "g_0", "g_0", "g_0.5",
-                                  "g_0.5", "g_0.5", "g_0.5"),
-                   taxa = c("A", "B", "C", "D", "A",
-                            "B", "C", "D"),
-                   clade = c(1, 2, 3, 4, 1, 1, 2, 2)
+                   generation = c("g_0.5", "g_0.5", "g_0.5", "g_0.5"),
+                   taxa = c("A", "B", "C", "D"),
+                   clade = c(1, 1, 2, 2)
                  ),
-                 row.names = c(NA,-8L),
+                 row.names = c(NA,-4L),
                  class = "data.frame"
                ))
 })
@@ -45,14 +43,10 @@ test_that("#4 Simple tree cut test", {
   t = ape::read.tree(text = "((A),(B,(C,D)));")
   t = ape::compute.brlen(t)
 
-  expect_equal(slice_tree(t, 3),
+  expect_equal(.slice_tree(t, 3),
                structure(
                  list(
                    generation = c(
-                     "g_0",
-                     "g_0",
-                     "g_0",
-                     "g_0",
                      "g_0.33",
                      "g_0.33",
                      "g_0.33",
@@ -62,12 +56,12 @@ test_that("#4 Simple tree cut test", {
                      "g_0.67",
                      "g_0.67"
                    ),
-                   taxa = c("A", "B", "C", "D", "A", "B", "C", "D", "A", "B",
-                            "C", "D"),
-                   clade = c(1, 2, 3, 4, 1, 2, 3, 3, 1, 2, 2, 2)
+                   taxa = c("A", "B", "C",
+                            "D", "A", "B", "C", "D"),
+                   clade = c(1, 2, 3, 3, 1, 2, 2, 2)
                  ),
-                 class = "data.frame",
-                 row.names = c(NA,-12L)
+                 row.names = c(NA,-8L),
+                 class = "data.frame"
                ))
 })
 
@@ -80,7 +74,11 @@ test_that("#5 Full pipeline simple test", {
   trait = c("b", "a", "a", "a")
   names(trait) = t$tip.label
 
-  trait_heritage(t, trait, n_generations = 2)
+  ## Because A & B are singletons, they are not counted.
+  ## Then CD are the same so the probability of a shared trait is 1
+  expect_equal(trait_heritage(t, trait, n_generations = 2)$clade_probability,
+               1)
+
 })
 
 # plot(t)

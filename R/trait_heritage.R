@@ -6,7 +6,6 @@
 #' @return denominator: The number of taxa pairs within a clade
 #' @export
 #'
-#' @examples
 .clade_probabilities = function(clade_states) {
 
   if(length(clade_states) > 1) {
@@ -31,8 +30,7 @@
 #' @return clades: a data.frame showing the clades for each taxa within each generation.
 #' @export
 #'
-#' @examples
-slice_tree = function(tree, n_generations){
+.slice_tree = function(tree, n_generations){
   # Calculate tree depth
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
   root_depth = 0 # assumes that taxa start at 0. We make the first cut just above zoer
@@ -75,13 +73,12 @@ slice_tree = function(tree, n_generations){
 #' @return a dataframe containing the probability of shared languages within each generation
 #' @export
 #'
-#' @examples
 trait_heritage = function(tree, trait, n_generations){
 
   ## Add argument tests to the function
 
   # 1. Calculate tree cuts
-  clades = slice_tree(tree, n_generations)
+  clades = .slice_tree(tree, n_generations)
 
   # Add trait to splits
   clades = dplyr::full_join(clades, data.frame(taxa = names(trait), trait = trait), by = "taxa")
@@ -90,7 +87,7 @@ trait_heritage = function(tree, trait, n_generations){
   generations = unique(clades$generation)
 
   # Use lapply for generations and sapply for clade_sets
-  output <- lapply(generations, function(g) {
+  output = lapply(generations, function(g) {
     generation_df <- clades[clades$generation == g, ]
     clade_sets <- unique(generation_df$clade)
 
