@@ -81,6 +81,18 @@ test_that("#5 Full pipeline simple test", {
 
 })
 
+
+test_that("#6 Pipeline NA test", {
+  t = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
+  t = ape::compute.brlen(t)
+
+  trait = c("b", "a", NA, "a")
+  names(trait) = t$tip.label
+
+  trait_heritage(t, trait, n_generations = 2)
+
+})
+
 # plot(t)
 # ape::axisPhylo()
 # abline(v = 0.6)

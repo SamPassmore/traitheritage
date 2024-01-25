@@ -2,7 +2,7 @@
 % Please edit documentation in R/permutations.R
 \name{permute_trait_heritage}
 \alias{permute_trait_heritage}
-\title{Title}
+\title{Calculate the true probabilities of shared traits and the permuted probability}
 \usage{
 permute_trait_heritage(tree, trait, n_generations, n_permutations = 100)
 }
@@ -19,5 +19,5 @@ permute_trait_heritage(tree, trait, n_generations, n_permutations = 100)
 a list containing the estimated probability, and the permuted probabilities.
 }
 \description{
-Title
+Calculate the true probabilities of shared traits and the permuted probability
 }

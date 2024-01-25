@@ -1,4 +1,4 @@
-#' Title
+#' Calculate the true probabilities of shared traits and the permuted probability
 #'
 #' @param tree a single phylogeny
 #' @param trait a vector of traits, named for each taxa

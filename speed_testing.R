@@ -16,8 +16,8 @@ n_generations = max(ape::node.depth.edgelength(tree)) / 25
 trait = metadata$Language
 names(trait) = metadata$tips.x
 
-all(tree$tip.label %in% names(language))
-length(tree$tip.label) == length(language)
+all(tree$tip.label %in% names(trait))
+length(tree$tip.label) == length(trait)
 
 
 profvis({
