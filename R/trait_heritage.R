@@ -75,6 +75,9 @@ trait_heritage = function(tree, trait, n_generations){
   ## Add argument tests to the function
   if(any(is.na(trait))) stop("No NA trait values are allowed. ")
 
+  # Trait names must match taxa labels
+  if(!all(names(trait) %in% tree$tip.label)) stop("Some tips have no matching trait. Make sure all tips have a trait.")
+
   # 1. Calculate tree cuts
   clades = .slice_tree(tree, n_generations)
 

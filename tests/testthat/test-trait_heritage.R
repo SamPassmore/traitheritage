@@ -89,9 +89,22 @@ test_that("#6 Pipeline NA test", {
   trait = c("b", "a", NA, "a")
   names(trait) = t$tip.label
 
-  trait_heritage(t, trait, n_generations = 2)
+  expect_error(trait_heritage(t, trait, n_generations = 2))
 
 })
+
+
+test_that("#6 Matching names test", {
+  t = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
+  t = ape::compute.brlen(t)
+
+  trait = c("b", "a", "a", "a")
+  names(trait) = c("tA", "tB", "AnotherTaxa", "tD")
+
+  expect_error(trait_heritage(t, trait, n_generations = 2))
+
+})
+
 
 # plot(t)
 # ape::axisPhylo()

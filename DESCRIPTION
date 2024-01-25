@@ -15,5 +15,6 @@ Config/testthat/edition: 3
 Imports: 
     ape,
     data.table,
+    dplyr,
     phyloregion
 RoxygenNote: 7.2.3

@@ -69,13 +69,16 @@ profvis({
 ## Subsetting test
 g = "g_7725"
 generation_df = as.data.table(clades)
+g2 = generation_df
+g2 = setkey(g2, generation)
 
 microbenchmark(
   clades[clades$generation == g, ],
-  {
-    generation_df[generation == g]
-  },
-  times = 10
+  generation_df[generation == g],
+  generation_df[generation == g,],
+  generation_df[generation_df$generation == g],
+  g2[g2$generation == g],
+  times = 50
 )
 
 ## Lapply test
