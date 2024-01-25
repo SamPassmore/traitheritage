@@ -86,6 +86,8 @@ trait_heritage = function(tree, trait, n_generations){
 
   # Use lapply for generations and sapply for clade_sets
   generation_df = as.data.table(clades)
+  # set key on data.table for speeding up subsetting
+  setkey(generation_df, generation)
   output = lapply(generations, function(g) {
     generation_df = generation_df[generation_df$generation == g]
     clade_sets <- unique(generation_df$clade)
