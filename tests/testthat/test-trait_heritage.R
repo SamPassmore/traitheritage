@@ -12,6 +12,12 @@ test_that("#2 Simple clade calculation works",{
   expect_equal(.clade_probabilities(clade_states), list(numerator = 1, denominator = 3))
 })
 
+test_that("#2 Many values clade calculation works",{
+  clade_states = c("A", "A", "B", "C", "C")
+  names(clade_states) = c("t1", "t2", "t3", "t4", "t5")
+  expect_equal(.clade_probabilities(clade_states), list(numerator = 2, denominator = 10))
+})
+
 test_that("#3 A clade with one taxa should return all zeros",{
   clade_states = c("A")
   names(clade_states) = c("t1")

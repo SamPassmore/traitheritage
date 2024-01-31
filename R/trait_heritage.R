@@ -10,7 +10,8 @@
 
   if(length(clade_states) > 1) {
     x = as.numeric(factor(clade_states))
-    dd = 1 - c(dist(x, method = "manhattan"))
+    # dd = 1 - c(dist(x, method = "manhattan"))
+    dd =  1 - c(dist(x, method = "manhattan") > 0)
     numerator = sum(dd)
     denominator = length(dd)
   } else {
