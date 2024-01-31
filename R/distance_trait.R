@@ -27,7 +27,7 @@ distance_matrix = as.matrix(dist(distances))
 cut_off = 2
 n_generations = 2
 
-distance_trait_heritage = function(tree, trait, n_generations, distance_matrix, cut_off){
+distance_trait_heritage = function(tree, n_generations, distance_matrix, cut_off){
 
   # 1. Calculate tree cuts
   clades = .slice_tree(tree, n_generations)
