@@ -4,12 +4,12 @@
 \alias{.slice_tree}
 \title{Internal Function: Identify clades at all generations}
 \usage{
-.slice_tree(tree, n_generations)
+.slice_tree(tree, generation_time)
 }
 \arguments{
 \item{tree}{a phylogenetic tree}
 
-\item{n_generations}{A number showing the number of generations to calculate for the tree. User should calculate this based on their branch lengths}
+\item{generation_time}{A number showing the number of generations to calculate for the tree. User should calculate this based on their branch lengths}
 }
 \value{
 clades: a data.frame showing the clades for each taxa within each generation.

@@ -4,14 +4,14 @@
 \alias{trait_heritage}
 \title{Calculate the heritage of a trait along a single phylogeny}
 \usage{
-trait_heritage(tree, trait, n_generations)
+trait_heritage(tree, trait, generation_time)
 }
 \arguments{
 \item{tree}{a single phylogeny}
 
 \item{trait}{a vector of traits, named for each taxa}
 
-\item{n_generations}{the number of times to cut a tree and calculate the probability of trait heritage}
+\item{generation_time}{the number of times to cut a tree and calculate the probability of trait heritage}
 }
 \value{
 a dataframe containing the probability of shared languages within each generation

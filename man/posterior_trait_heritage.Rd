@@ -4,14 +4,14 @@
 \alias{posterior_trait_heritage}
 \title{Calculate the probability of trait heritage across a posterior sample of trees}
 \usage{
-posterior_trait_heritage(trees, trait, n_generations)
+posterior_trait_heritage(trees, trait, generation_time)
 }
 \arguments{
 \item{trees}{A posterior sample of trees, of class multiPhylo}
 
 \item{trait}{A named vector of trait values. Names should match taxa}
 
-\item{n_generations}{A numeric value indicating how many equal cuts to make in the tree}
+\item{generation_time}{A numeric value indicating how many equal cuts to make in the tree}
 }
 \value{
 a Dataframe showing the probability of a shared trait for each generation, witihn each tree

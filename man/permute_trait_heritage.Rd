@@ -4,14 +4,14 @@
 \alias{permute_trait_heritage}
 \title{Calculate the true probabilities of shared traits and the permuted probability}
 \usage{
-permute_trait_heritage(tree, trait, n_generations, n_permutations = 100)
+permute_trait_heritage(tree, trait, generation_time, n_permutations = 100)
 }
 \arguments{
 \item{tree}{a single phylogeny}
 
 \item{trait}{a vector of traits, named for each taxa}
 
-\item{n_generations}{the number of times to cut a tree and calculate the probability of trait heritage}
+\item{generation_time}{the time between generations to cut the phylogeny at}
 
 \item{n_permutations}{the number of permutations to run as a comparison (default = 100)}
 }
