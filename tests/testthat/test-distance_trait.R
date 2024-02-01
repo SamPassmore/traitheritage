@@ -17,18 +17,18 @@ test_that("#1. Simple distance test", {
   distance_matrix = as.matrix(dist(distances))
 
   cut_off = 2
-  n_generations = 2
+  generation_time = 0.5
 
   result = distance_trait_heritage(
     t,
     distance_matrix = distance_matrix,
-    n_generations = n_generations,
+    generation_time = generation_time,
     cut_off = cut_off
   )
 
-  expect_equal(result$clade_probability, 1)
-  expect_equal(result$numerator_sum, 2)
-  expect_equal(result$denominator_sum, 2)
+  expect_equal(result$clade_probability[2], 1)
+  expect_equal(result$numerator_sum[2], 2)
+  expect_equal(result$denominator_sum[2], 2)
 })
 
 test_that("#2. Simple distance test", {
@@ -48,18 +48,18 @@ test_that("#2. Simple distance test", {
   distance_matrix = as.matrix(dist(distances))
 
   cut_off = 2
-  n_generations = 3
+  generation_time = 0.25
 
   result = distance_trait_heritage(
     t,
     distance_matrix = distance_matrix,
-    n_generations = n_generations,
+    generation_time = generation_time,
     cut_off = cut_off
   )
 
-  expect_equal(result$clade_probability, c(NaN, 0.333333333333333))
-  expect_equal(result$numerator_sum, c(0, 1))
-  expect_equal(result$denominator_sum, c(0, 3))
+  expect_equal(result$clade_probability, c(NaN, NaN, NaN, 0.333333333333333))
+  expect_equal(result$numerator_sum, c(0, 0, 0, 1))
+  expect_equal(result$denominator_sum, c(0, 0, 0, 3))
 })
 
 test_that("#2. Simple Error test", {

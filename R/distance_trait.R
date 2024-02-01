@@ -25,16 +25,16 @@ distances = matrix(
 distance_matrix = as.matrix(dist(distances))
 
 cut_off = 2
-n_generations = 2
+generation_time = 25
 
-distance_trait_heritage = function(tree, n_generations, distance_matrix, cut_off){
+distance_trait_heritage = function(tree, generation_time, distance_matrix, cut_off){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
   if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
   if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
 
   # 1. Calculate tree cuts
-  clades = .slice_tree(tree, n_generations)
+  clades = .slice_tree(tree, generation_time)
 
   # 2. Calculate trait distance
   ## This solution is taken from https://stackoverflow.com/a/76731093/1544746

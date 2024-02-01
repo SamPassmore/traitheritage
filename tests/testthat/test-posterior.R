@@ -11,9 +11,9 @@ test_that("#1. Simple posterior test", {
   trait = c("a", "a", "b", "b")
   names(trait) = c("A", "B", "C", "D")
 
-  result = posterior_trait_heritage(trees, trait, n_generations = 2)
+  result = posterior_trait_heritage(trees, trait, generation_time = 0.5)
 
-  expect_equal(result$clade_probability, c(1, 1, 1, 1))
+  expect_equal(result$clade_probability, c(NaN, 1, NaN, 1, NaN, 1, NaN, 1))
 })
 
 test_that("#1. Second simple posterior test", {
@@ -27,7 +27,7 @@ test_that("#1. Second simple posterior test", {
   trait = c("a", "b", "b", "b")
   names(trait) = c("A", "B", "C", "D")
 
-  result = posterior_trait_heritage(trees, trait, n_generations = 2)
+  result = posterior_trait_heritage(trees, trait, generation_time =  0.5)
 
-  expect_equal(result$clade_probability, c(0.5, 0.5, 0.5, 0.5))
+  expect_equal(result$clade_probability, c(NaN, 0.5, NaN, 0.5, NaN, 0.5, NaN, 0.5))
 })

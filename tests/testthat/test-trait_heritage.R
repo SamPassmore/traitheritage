@@ -26,20 +26,53 @@ test_that("#3 A clade with one taxa should return all zeros",{
 
 
 ## Tree cut tests
-
 test_that("#3 Simple tree cut test", {
   # make a fake tree
   t = ape::read.tree(text = "((A,B),(C,D));")
   t = ape::compute.brlen(t)
 
-  expect_equal(.slice_tree(t, 2),
+  expect_equal(.slice_tree(t, 0.33),
                structure(
                  list(
-                   generation = c("g_0.5", "g_0.5", "g_0.5", "g_0.5"),
-                   taxa = c("A", "B", "C", "D"),
-                   clade = c(1, 1, 2, 2)
+                   generation = c(
+                     "g_0",
+                     "g_0",
+                     "g_0",
+                     "g_0",
+                     "g_0.33",
+                     "g_0.33",
+                     "g_0.33",
+                     "g_0.33",
+                     "g_0.66",
+                     "g_0.66",
+                     "g_0.66",
+                     "g_0.66",
+                     "g_0.99",
+                     "g_0.99",
+                     "g_0.99",
+                     "g_0.99"
+                   ),
+                   taxa = c(
+                     "A",
+                     "B",
+                     "C",
+                     "D",
+                     "A",
+                     "B",
+                     "C",
+                     "D",
+                     "A",
+                     "B",
+                     "C",
+                     "D",
+                     "A",
+                     "B",
+                     "C",
+                     "D"
+                   ),
+                   clade = c(1, 2, 3, 4, 1, 2, 3, 4, 1, 1, 2, 2, 1, 1, 2, 2)
                  ),
-                 row.names = c(NA,-4L),
+                 row.names = c(NA,-16L),
                  class = "data.frame"
                ))
 })
@@ -49,24 +82,48 @@ test_that("#4 Simple tree cut test", {
   t = ape::read.tree(text = "((A),(B,(C,D)));")
   t = ape::compute.brlen(t)
 
-  expect_equal(.slice_tree(t, 3),
+  expect_equal(.slice_tree(t, 0.33),
                structure(
                  list(
                    generation = c(
+                     "g_0",
+                     "g_0",
+                     "g_0",
+                     "g_0",
                      "g_0.33",
                      "g_0.33",
                      "g_0.33",
                      "g_0.33",
-                     "g_0.67",
-                     "g_0.67",
-                     "g_0.67",
-                     "g_0.67"
+                     "g_0.66",
+                     "g_0.66",
+                     "g_0.66",
+                     "g_0.66",
+                     "g_0.99",
+                     "g_0.99",
+                     "g_0.99",
+                     "g_0.99"
                    ),
-                   taxa = c("A", "B", "C",
-                            "D", "A", "B", "C", "D"),
-                   clade = c(1, 2, 3, 3, 1, 2, 2, 2)
+                   taxa = c(
+                     "A",
+                     "B",
+                     "C",
+                     "D",
+                     "A",
+                     "B",
+                     "C",
+                     "D",
+                     "A",
+                     "B",
+                     "C",
+                     "D",
+                     "A",
+                     "B",
+                     "C",
+                     "D"
+                   ),
+                   clade = c(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 3, 1, 2, 2, 2)
                  ),
-                 row.names = c(NA,-8L),
+                 row.names = c(NA,-16L),
                  class = "data.frame"
                ))
 })
@@ -82,9 +139,19 @@ test_that("#5 Full pipeline simple test", {
 
   ## Because A & B are singletons, they are not counted.
   ## Then CD are the same so the probability of a shared trait is 1
-  expect_equal(trait_heritage(t, trait, n_generations = 2)$clade_probability,
-               1)
-
+  expect_equal(trait_heritage(t, trait, generation_time = 0.2),
+               structure(
+                 list(
+                   generation = c("g_0", "g_0.2", "g_0.4", "g_0.6",
+                                  "g_0.8"),
+                   numerator_sum = c(0, 0, 1, 1, 3),
+                   denominator_sum = c(0,
+                                       0, 1, 1, 3),
+                   clade_probability = c(NaN, NaN, 1, 1, 1)
+                 ),
+                 class = "data.frame",
+                 row.names = c(NA,-5L)
+               ))
 })
 
 
@@ -110,21 +177,5 @@ test_that("#6 Matching names test", {
   expect_error(trait_heritage(t, trait, n_generations = 2))
 
 })
-
-
-# plot(t)
-# ape::axisPhylo()
-# abline(v = 0.6)
-# abline(v = 0.8)
-#
-# phyloregion::get_clades(t, cut = 1.1)
-# phyloregion::get_clades(t, cut = 1.0)
-# phyloregion::get_clades(t, cut = 0.8)
-# phyloregion::get_clades(t, cut = 0.6)
-# phyloregion::get_clades(t, cut = 0.4)
-# phyloregion::get_clades(t, cut = 0.2)
-# phyloregion::get_clades(t, cut = 0.0)
-
-
 
 
