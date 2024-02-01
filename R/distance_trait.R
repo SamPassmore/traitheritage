@@ -29,6 +29,10 @@ n_generations = 2
 
 distance_trait_heritage = function(tree, n_generations, distance_matrix, cut_off){
 
+  if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
+  if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
+  if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
+
   # 1. Calculate tree cuts
   clades = .slice_tree(tree, n_generations)
 
