@@ -149,7 +149,7 @@ test_that("#5 Full pipeline simple test", {
                                        0, 1, 1, 3),
                    clade_probability = c(NaN, NaN, 1, 1, 1)
                  ),
-                 class = "data.frame",
+                 class = c("data.table", "data.frame"),
                  row.names = c(NA,-5L)
                ))
 })
@@ -162,7 +162,7 @@ test_that("#6 Pipeline NA test", {
   trait = c("b", "a", NA, "a")
   names(trait) = t$tip.label
 
-  expect_error(trait_heritage(t, trait, n_generations = 2))
+  expect_error(trait_heritage(t, trait, generation_time = 0.2))
 
 })
 
@@ -174,7 +174,20 @@ test_that("#6 Matching names test", {
   trait = c("b", "a", "a", "a")
   names(trait) = c("tA", "tB", "AnotherTaxa", "tD")
 
-  expect_error(trait_heritage(t, trait, n_generations = 2))
+  expect_error(trait_heritage(t, trait, generation_time = 0.2))
+
+})
+
+test_that("#6 No matches", {
+  t = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
+  t = ape::compute.brlen(t)
+
+  trait = c("b", "a", "c", "d")
+  names(trait) = c("tA", "tB", "tC", "tD")
+
+  result = trait_heritage(t, trait, generation_time = 0.2)
+
+  expect_equal(result$clade_probability, c(NaN, NaN, 0, 0, 0))
 
 })
 
