@@ -38,7 +38,7 @@
 
                     clade_df
                   })
-  names(clades) = paste0("g_", round(cuts, 2))
+  names(clades) = paste0("g_", cuts)
 
   clades_df = purrr::map_df(clades, ~as.data.frame(.x), .id="generation")
   clades_df$clade = as.numeric(clades_df$clade) # it is useful later for this to be numeric, but this is just a choice.
