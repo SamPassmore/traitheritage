@@ -44,7 +44,7 @@
   clades_df$clade = as.numeric(clades_df$clade) # it is useful later for this to be numeric, but this is just a choice.
 
   # Return
-  clades_df
+ return(data.table::setDT(clades_df))
 }
 
 
@@ -71,10 +71,10 @@ trait_heritage = function(tree, trait, generation_time){
   # Add trait to splits
   clades = dplyr::full_join(clades, data.frame(taxa = names(trait), trait = trait), by = "taxa")
 
-  # Use lapply for generations and sapply for clade_sets
+  # Use DT for fast calculations.
   data.table::setDT(clades)
 
-  output <- clades[, .clade_probabilities(trait), by = c("generation", "clade")]
+  output = clades[, .clade_probabilities(trait), by = c("generation", "clade")]
   output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
   output[, clade_probability := numerator_sum / denominator_sum]
 

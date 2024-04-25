@@ -73,7 +73,7 @@ test_that("#3 Simple tree cut test", {
                    clade = c(1, 2, 3, 4, 1, 2, 3, 4, 1, 1, 2, 2, 1, 1, 2, 2)
                  ),
                  row.names = c(NA,-16L),
-                 class = "data.frame"
+                 class = c("data.table", "data.frame")
                ))
 })
 
@@ -124,7 +124,7 @@ test_that("#4 Simple tree cut test", {
                    clade = c(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 3, 1, 2, 2, 2)
                  ),
                  row.names = c(NA,-16L),
-                 class = "data.frame"
+                 class =  c("data.table", "data.frame")
                ))
 })
 
