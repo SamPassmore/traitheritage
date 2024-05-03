@@ -131,15 +131,15 @@ test_that("#4 Simple tree cut test", {
 ## Main function tests
 
 test_that("#5 Full pipeline simple test", {
-  t = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
-  t = ape::compute.brlen(t)
+  tree = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
+  tree = ape::compute.brlen(tree)
 
   trait = c("b", "a", "a", "a")
-  names(trait) = t$tip.label
+  names(trait) = tree$tip.label
 
   ## Because A & B are singletons, they are not counted.
   ## Then CD are the same so the probability of a shared trait is 1
-  expect_equal(trait_heritage(t, trait, generation_time = 0.2),
+  expect_equal(trait_heritage(tree, trait, generation_time = 0.2),
                structure(
                  list(
                    generation = c("g_0", "g_0.2", "g_0.4", "g_0.6",

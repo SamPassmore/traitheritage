@@ -7,8 +7,10 @@
 #' @export
 #'
 .clade_probabilities <- function(TS) {
+
   N <- sum(choose(table(TS), 2))
   D <- choose(length(TS), 2)
+
   return(list(numerator = N, denominator = D))
 }
 
@@ -54,11 +56,12 @@
 #' @param tree a single phylogeny
 #' @param trait a vector of traits, named for each taxa
 #' @param generation_time the number of times to cut a tree and calculate the probability of trait heritage
+#' @param clade_weighted the number of times to cut a tree and calculate the probability of trait heritage
 #'
 #' @return a dataframe containing the probability of shared languages within each generation
 #' @export
 #'
-trait_heritage = function(tree, trait, generation_time){
+trait_heritage = function(tree, trait, generation_time, clade_weighted = FALSE){
   ## Add argument tests to the function
   if(any(is.na(trait))) stop("No NA trait values are allowed. ")
 
@@ -75,8 +78,16 @@ trait_heritage = function(tree, trait, generation_time){
   data.table::setDT(clades)
 
   output = clades[, .clade_probabilities(trait), by = c("generation", "clade")]
-  output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
-  output[, clade_probability := numerator_sum / denominator_sum]
+
+  if(clade_weighted){
+    # sum(denominator * r) / sum(denominator)
+    output[, r := numerator / denominator]
+    output[, .(clade_probability = sum(denominator * r, na.rm = TRUE) / sum(denominator, na.rm = TRUE)), by = "generation"]
+  } else {
+    output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
+    output[, clade_probability := numerator_sum / denominator_sum]
+  }
+
 
   # Return
   output
