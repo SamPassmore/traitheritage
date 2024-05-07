@@ -8,15 +8,15 @@
 #' @return a list containing the estimated probability, and the permuted probabilities.
 #' @export
 #'
-permute_trait_heritage = function(tree, trait, generation_time, n_permutations = 100){
+permute_trait_heritage = function(tree, trait, generation_time, state = NULL, n_permutations = 100){
   # True data results
-  true = trait_heritage(tree, trait, generation_time)
+  true = trait_heritage(tree, trait, generation_time, state = state)
 
   # Permuted results
   permuted_list = lapply(1:n_permutations, function(i){
     p_trait = trait
     names(p_trait) = names(p_trait)[sample(1:length(p_trait))]
-    trait_heritage(tree, p_trait, generation_time)
+    trait_heritage(tree, p_trait, generation_time, state = state)
   })
   names(permuted_list) = paste0("p_", 1:n_permutations)
 
