@@ -7,18 +7,12 @@
 #' @return denominator: The number of taxa pairs within a clade
 #' @export
 #'
-.clade_probabilities <- function(TS, state = NULL) {
+.clade_probabilities <- function(state) {
 
-  if(is.null(state)){
-    # Calculate all matching pairs
-    N <- sum(choose(table(TS), 2))
-  } else {
-    # Calculate particular matching pairs
-    N <- sum(choose(table(TS)[state], 2))
-  }
+  N <- choose(table(state), 2)
+  D <- choose(length(state), 2)
 
-  D <- choose(length(TS), 2)
-  return(list(numerator = N, denominator = D))
+  return(data.table(numerator = N, denominator = D))
 }
 
 #' Internal Function: Identify clades at all generations
@@ -67,7 +61,7 @@
 #' @return a dataframe containing the probability of shared languages within each generation
 #' @export
 #'
-trait_heritage = function(tree, trait, generation_time, state = NULL){
+trait_heritage = function(tree, trait, generation_time){
   ## Add argument tests to the function
   if(any(is.na(trait))) stop("No NA trait values are allowed. ")
 
@@ -83,7 +77,7 @@ trait_heritage = function(tree, trait, generation_time, state = NULL){
   # Use DT for fast calculations.
   data.table::setDT(clades)
 
-  output = clades[, .clade_probabilities(trait, state = state), by = c("generation", "clade")]
+  output = clades[, .clade_probabilities(trait), by = c("generation", "clade")]
   output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
   output[, clade_probability := numerator_sum / denominator_sum]
 

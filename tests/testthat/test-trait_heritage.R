@@ -35,7 +35,6 @@ test_that("#4 Conditional clade probabilities",{
   expect_equal(.clade_probabilities(clade_states, state = "A"), list(numerator = 1, denominator = 10))
 })
 
-
 ## Tree cut tests
 test_that("#3 Simple tree cut test", {
   # make a fake tree
