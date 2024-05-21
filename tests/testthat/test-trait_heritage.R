@@ -3,36 +3,38 @@
 test_that("#1 Simple clade calculation works",{
   clade_states = c("A", "A")
   names(clade_states) = c("t1", "t2")
-  expect_equal(.clade_probabilities(clade_states), list(numerator = 1, denominator = 1))
+  expect_equal(.clade_probabilities(clade_states), data.table(state = c("A"), numerator = 1, denominator = 1))
 })
 
 test_that("#2 Simple clade calculation works",{
   clade_states = c("A", "A", "B")
   names(clade_states) = c("t1", "t2", "t3")
-  expect_equal(.clade_probabilities(clade_states), list(numerator = 1, denominator = 3))
+  expect_equal(
+    .clade_probabilities(clade_states),
+    data.table(
+      state = c("A", "B"),
+      numerator = c(1, 0),
+      denominator = c(3, 3)
+    )
+  )
 })
 
 test_that("#2 Many values clade calculation works",{
   clade_states = c("A", "A", "B", "C", "C")
   names(clade_states) = c("t1", "t2", "t3", "t4", "t5")
-  expect_equal(.clade_probabilities(clade_states), list(numerator = 2, denominator = 10))
+  expect_equal(.clade_probabilities(clade_states),
+               data.table(
+                 state = c("A", "B", "C"),
+                 numerator = c(1, 0, 1),
+                 denominator = c(10, 10, 10)
+               ))
 })
 
 test_that("#3 A clade with one taxa should return all zeros",{
   clade_states = c("A")
   names(clade_states) = c("t1")
-  expect_equal(.clade_probabilities(clade_states), list(numerator = 0, denominator = 0))
-})
-
-test_that("#4 Conditional clade probabilities",{
-  clade_states = c("A", "A", "B", "C", "C")
-  names(clade_states) = c("t1", "t2", "t3", "t4", "t5")
-  state = "A"
-
-  N <- sum(choose(table(clade_states)[state], 2))
-  D <- choose(length(clade_states), 2)
-
-  expect_equal(.clade_probabilities(clade_states, state = "A"), list(numerator = 1, denominator = 10))
+  expect_equal(.clade_probabilities(clade_states),
+               data.table(state = "A", numerator = 0, denominator = 0))
 })
 
 ## Tree cut tests
@@ -149,19 +151,53 @@ test_that("#5 Full pipeline simple test", {
 
   ## Because A & B are singletons, they are not counted.
   ## Then CD are the same so the probability of a shared trait is 1
-  expect_equal(trait_heritage(tree, trait, generation_time = 0.2),
-               structure(
-                 list(
-                   generation = c("g_0", "g_0.2", "g_0.4", "g_0.6",
-                                  "g_0.8"),
-                   numerator_sum = c(0, 0, 1, 1, 3),
-                   denominator_sum = c(0,
-                                       0, 1, 1, 3),
-                   clade_probability = c(NaN, NaN, 1, 1, 1)
-                 ),
-                 class = c("data.table", "data.frame"),
-                 row.names = c(NA,-5L)
-               ))
+  expect_equal(
+    trait_heritage(tree, trait, generation_time = 0.2),
+    structure(
+      list(
+        generation = c(
+          "g_0",
+          "g_0",
+          "g_0",
+          "g_0",
+          "g_0.2",
+          "g_0.2",
+          "g_0.2",
+          "g_0.2",
+          "g_0.4",
+          "g_0.4",
+          "g_0.4",
+          "g_0.6",
+          "g_0.6",
+          "g_0.6",
+          "g_0.8",
+          "g_0.8"
+        ),
+        clade = c(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 1, 2),
+        state = c(
+          "b",
+          "a",
+          "a",
+          "a",
+          "b",
+          "a",
+          "a",
+          "a",
+          "b",
+          "a",
+          "a",
+          "b",
+          "a",
+          "a",
+          "b",
+          "a"
+        ),
+        numerator = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 3),
+        denominator = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 3)
+      ),
+      row.names = c(NA, -16L),
+      class = c("data.table", "data.frame")
+    ))
 })
 
 
@@ -197,7 +233,11 @@ test_that("#6 No matches", {
 
   result = trait_heritage(t, trait, generation_time = 0.2)
 
-  expect_equal(result$clade_probability, c(NaN, NaN, 0, 0, 0))
+  out_probability = result[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
+  out_probability[, clade_probability := numerator_sum / denominator_sum]
+
+
+  expect_equal(out_probability$clade_probability, c(NaN, NaN, 0, 0, 0))
 
 })
 

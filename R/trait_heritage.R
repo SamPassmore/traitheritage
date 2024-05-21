@@ -12,7 +12,9 @@
   N <- choose(table(state), 2)
   D <- choose(length(state), 2)
 
-  return(data.table(numerator = N, denominator = D))
+
+
+  return(data.table(state = names(N), numerator = c(N), denominator = D))
 }
 
 #' Internal Function: Identify clades at all generations
@@ -78,8 +80,10 @@ trait_heritage = function(tree, trait, generation_time){
   data.table::setDT(clades)
 
   output = clades[, .clade_probabilities(trait), by = c("generation", "clade")]
-  output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
-  output[, clade_probability := numerator_sum / denominator_sum]
+
+  # This code provides summaries at each point in time
+  # output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
+  # output[, clade_probability := numerator_sum / denominator_sum]
 
   # Return
   output

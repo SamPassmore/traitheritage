@@ -13,7 +13,10 @@ test_that("#1. Simple posterior test", {
 
   result = posterior_trait_heritage(trees, trait, generation_time = 0.5)
 
-  expect_equal(result$clade_probability, c(NaN, 1, NaN, 1, NaN, 1, NaN, 1))
+  out_probability = result[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = c("generation", "posterior")]
+  out_probability[, clade_probability := numerator_sum / denominator_sum]
+
+  expect_equal(out_probability$clade_probability, c(NaN, 1, NaN, 1, NaN, 1, NaN, 1))
 })
 
 test_that("#1. Second simple posterior test", {
@@ -29,5 +32,8 @@ test_that("#1. Second simple posterior test", {
 
   result = posterior_trait_heritage(trees, trait, generation_time =  0.5)
 
-  expect_equal(result$clade_probability, c(NaN, 0.5, NaN, 0.5, NaN, 0.5, NaN, 0.5))
+  out_probability = result[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = c("generation", "posterior")]
+  out_probability[, clade_probability := numerator_sum / denominator_sum]
+
+  expect_equal(round(out_probability$clade_probability, 2), c(NaN, 0.33, NaN, 0.33, NaN, 0.33, NaN, 0.33))
 })
