@@ -22,6 +22,16 @@
 # between_variance = function(){}
 
 ## Main function
+#' Calculate within and between variance for a trait in a tree
+#'
+#' @param tree
+#' @param generation_time
+#' @param trait
+#'
+#' @return
+#' @export
+#'
+#' @examples
 within_between = function(tree, generation_time, trait){
 
   if(is.null(names(trait)) | !all(tree$tip.label %in% names(trait))){
