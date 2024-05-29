@@ -1,33 +1,33 @@
-## Distance function
-
-library(ape)
-library(data.table)
-library(dplyr)
-
-t = ape::read.tree(text = "((A,B),(C,D));")
-t = ape::compute.brlen(t)
-
-tree = t
-
-trees = list(t, t, t, t)
-class(trees) = "multiPhylo"
-
-trait = c("a", "a", "b", "b")
-names(trait) = c("A", "B", "C", "D")
-
-distances = matrix(
-  c(1, 2,
-    2, 1,
-    5, 6,
-    6, 5),
-  byrow = TRUE,
-  ncol = 2,
-  dimnames = list(t$tip.label, c("X", "Y"))
-)
-distance_matrix = as.matrix(dist(distances))
-
-cut_off = 2
-generation_time = 0.1
+# ## Distance function
+#
+# library(ape)
+# library(data.table)
+# library(dplyr)
+#
+# t = ape::read.tree(text = "((A,B),(C,D));")
+# t = ape::compute.brlen(t)
+#
+# tree = t
+#
+# trees = list(t, t, t, t)
+# class(trees) = "multiPhylo"
+#
+# trait = c("a", "a", "b", "b")
+# names(trait) = c("A", "B", "C", "D")
+#
+# distances = matrix(
+#   c(1, 2,
+#     2, 1,
+#     5, 6,
+#     6, 5),
+#   byrow = TRUE,
+#   ncol = 2,
+#   dimnames = list(t$tip.label, c("X", "Y"))
+# )
+# distance_matrix = as.matrix(dist(distances))
+#
+# cut_off = 2
+# generation_time = 0.1
 
 
 distance_trait_heritage = function(tree, generation_time, distance_matrix, cut_off){
