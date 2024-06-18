@@ -47,7 +47,6 @@ within_between = function(tree, generation_time, trait){
   # Join traits
   clades = clades[trait_dt, on = 'taxa']
 
-
   # clade_traits = tapply(clades$taxa, list(clades$generation, clades$clade), function(x) trait[x])
   # clade_traits = t(sapply(clades, function(cc) trait[cc$taxa]))
 
