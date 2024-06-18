@@ -17,6 +17,49 @@
   return(data.table(state = names(N), numerator = c(N), denominator = D))
 }
 
+#' Internal function: Cuts a phylogeny at a given point
+#'
+#' @param tree
+#' @param cut
+#' @param k
+#'
+#' @description
+#' This function has been adapted from phyloregion, but included separately here to avoid unnecessary dependencies from that package
+#' Please cite Daru, B. H., Karunarathne P., & Schliep K. (2020), phyloregion: R package for biogeographic regionalization and macroecology. Methods in Ecology and Evolution, 11: 1483-1491. doi:10.1111/2041-210X.13478
+#' if using this function.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.get_clades = function(tree, cut = NULL, k = NULL){
+  nh <- ape::node.depth.edgelength(tree)
+  nh <- max(nh) - nh
+  if (!is.null(k)) {
+    if (k >= Ntip(tree))
+      return(as.list(tree$tip.label))
+    if (k == 1)
+      return(list(tree$tip.label))
+    kids <- lengths(phangorn::Descendants(tree, type = "children"))
+    kids[kids > 0] <- kids[kids > 0] - 1L
+    tmp <- 1
+    eps <- 1e-08
+    ordered_nh <- order(nh, decreasing = TRUE)
+    i <- 1
+    while (tmp < k) {
+      j <- ordered_nh[i]
+      cut <- nh[j] - eps
+      tmp <- tmp + kids[j]
+      i <- i + 1
+    }
+  }
+  ind <- which((nh[tree$edge[, 1]] > cut) & (nh[tree$edge[,
+                                                          2]] <= cut))
+  desc <- phangorn::Descendants(tree)
+  res <- desc[tree$edge[ind, 2]]
+  lapply(res, function(res, tips) tips[res], tree$tip.label)
+}
+
 #' Internal Function: Identify clades at all generations
 #'
 #' @param tree a phylogenetic tree
@@ -35,7 +78,7 @@
   clades = lapply(cuts,
                   function(cc) {
                     ## get.clades assumes that taxa start at zero, and cuts go backwards from there.
-                    .clades = phyloregion::get_clades(tree, cut = cc)
+                    .clades = .get_clades(tree, cut = cc)
                     names(.clades) = seq_along(.clades)
                     ## Stack clades
                     clade_df = stack(.clades)

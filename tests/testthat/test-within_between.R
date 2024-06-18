@@ -55,9 +55,9 @@ test_that("#2 Simple Within-Between test", {
   trait = c("b", "b", "a", "a")
   names(trait) = tree$tip.label
 
-  plot(tree)
-  tiplabels(pch = 19, col = factor(trait))
-  abline(v = c(0.25, 0.5, 0.75))
+  # plot(tree)
+  # tiplabels(pch = 19, col = factor(trait))
+  # abline(v = c(0.25, 0.5, 0.75))
 
   expect_equal(
     traitheritage::within_between(

@@ -16,6 +16,6 @@ Imports:
     ape,
     data.table,
     dplyr,
-    phyloregion,
+    phangorn,
     reshape2
 RoxygenNote: 7.2.3
