@@ -16,7 +16,7 @@ permute_trait_heritage = function(tree, trait, generation_time, n_permutations =
   permuted_list = lapply(1:n_permutations, function(i){
     p_trait = trait
     names(p_trait) = names(p_trait)[sample(1:length(p_trait))]
-    trait_heritage(tree, p_trait, generation_time)
+    p.trait_heritage(tree, p_trait, generation_time)
   })
   names(permuted_list) = paste0("p_", 1:n_permutations)
 
@@ -50,6 +50,10 @@ p.trait_heritage = function(tree, trait, generation_time){
   data.table::setDT(clades)
 
   output = clades[, p.clade_probabilities(trait), by = c("generation", "clade")]
+
+  output <- clades[, .clade_probabilities(trait), by = c("generation", "clade")]
+  output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
+  output[, clade_probability := numerator_sum / denominator_sum]
 
   # Return
   output
