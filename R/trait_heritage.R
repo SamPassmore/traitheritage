@@ -124,10 +124,6 @@ trait_heritage = function(tree, trait, generation_time){
 
   output = clades[, .clade_probabilities(trait), by = c("generation", "clade")]
 
-  # This code provides summaries at each point in time
-  # output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
-  # output[, clade_probability := numerator_sum / denominator_sum]
-
   # Return
   output
 }

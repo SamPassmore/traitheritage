@@ -26,3 +26,33 @@ permute_trait_heritage = function(tree, trait, generation_time, n_permutations =
 
   list(true = true, permuted = permuted)
 }
+
+p.clade_probabilities <- function(TS) {
+  N <- sum(choose(table(TS), 2))
+  D <- choose(length(TS), 2)
+  return(list(numerator = N, denominator = D))
+}
+
+p.trait_heritage = function(tree, trait, generation_time){
+  ## Add argument tests to the function
+  if(any(is.na(trait))) stop("No NA trait values are allowed. ")
+
+  # Trait names must match taxa labels
+  if(!all(names(trait) %in% tree$tip.label)) stop("Some tips have no matching trait. Make sure all tips have a trait.")
+
+  # 1. Calculate tree cuts
+  clades = .slice_tree(tree, generation_time)
+
+  # Add trait to splits
+  clades = dplyr::full_join(clades, data.frame(taxa = names(trait), trait = trait), by = "taxa")
+
+  # Use DT for fast calculations.
+  data.table::setDT(clades)
+
+  output = clades[, p.clade_probabilities(trait), by = c("generation", "clade")]
+
+  # Return
+  output
+}
+
+
