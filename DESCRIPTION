@@ -2,10 +2,9 @@ Package: traitheritage
 Type: Package
 Title: What the Package Does (Title Case)
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Author: Sam Passmore
+Maintainer: Sam Passmore <u1123115@anu.edu.au>
+Description: Inferential methods for calculating the structure of phylogeny based on additional metadata
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
@@ -17,5 +16,6 @@ Imports:
     data.table,
     dplyr,
     phangorn,
+    purrr,
     reshape2
 RoxygenNote: 7.2.3
