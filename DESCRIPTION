@@ -1,10 +1,10 @@
 Package: traitheritage
 Type: Package
-Title: What the Package Does (Title Case)
+Title: TraitHeritage
 Version: 0.1.0
 Author: Sam Passmore
 Maintainer: Sam Passmore <u1123115@anu.edu.au>
-Description: Inferential methods for calculating the structure of phylogeny based on additional metadata
+Description: Inferential methods for calculating the phylogenetic heritage of taxa traits. 
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
