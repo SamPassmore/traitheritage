@@ -16,6 +16,5 @@ Imports:
     data.table,
     dplyr,
     phangorn,
-    purrr,
     reshape2
 RoxygenNote: 7.2.3

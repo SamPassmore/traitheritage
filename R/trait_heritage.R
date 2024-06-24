@@ -88,7 +88,7 @@
                   })
   names(clades) = paste0("g_", cuts)
 
-  clades_df = purrr::map_df(clades, ~as.data.frame(.x), .id="generation")
+  clades_df = data.table::rbindlist(clades, idcol = "generation")
   clades_df$clade = as.numeric(clades_df$clade) # it is useful later for this to be numeric, but this is just a choice.
 
   # Return
