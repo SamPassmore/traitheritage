@@ -100,3 +100,56 @@ test_that("#2 Simple Within-Between test", {
     )
   )
 })
+
+test_that("#2 Binary Numeric Within-Between test", {
+  tree = ape::read.tree(text = "((tA),(tB,(tC,tD)));")
+  tree = ape::compute.brlen(tree)
+
+  trait = c(1, 1, 0, 0)
+  names(trait) = tree$tip.label
+
+  # plot(tree)
+  # tiplabels(pch = 19, col = factor(trait))
+  # abline(v = c(0.25, 0.5, 0.75))
+
+  expect_equal(
+    traitheritage::within_between(
+      tree = tree,
+      generation_time = 0.25,
+      trait = trait
+    ),
+    list(
+      v_within = structure(
+        list(
+          generation = c(
+            "g_0",
+            "g_0.25",
+            "g_0.5",
+            "g_0.75",
+            "g_0",
+            "g_0.25",
+            "g_0.5",
+            "g_0.75"
+          ),
+          trait = c("0", "0", "0", "0", "1", "1", "1", "1"),
+          op = c(0, 0, 1, 1, 0, 0, 0, 0),
+          tp = c(1, 1, 1, 1, 1, 1, 1, 1),
+          v_within = c(0, 0, 1, 1, 0, 0, 0, 0)
+        ),
+        class = c("data.table", "data.frame"),
+        row.names = c(NA, -8L)
+      ),
+      v_between = structure(
+        list(
+          generation = c("g_0", "g_0.25", "g_0.5", "g_0.75"),
+          trait_pairs = c("01", "01", "01", "01"),
+          numerator = c(0, 0, 0, 2),
+          denominator = c(4L, 4L, 4L, 4L),
+          v_between = c(0, 0, 0, 0.5)
+        ),
+        class = c("data.table", "data.frame"),
+        row.names = c(NA, -4L)
+      )
+    )
+  )
+})

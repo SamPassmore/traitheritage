@@ -38,6 +38,11 @@ within_between = function(tree, generation_time, trait){
     stop("the trait object must have names that match the tree tips")
   }
 
+  if(is.numeric(trait)){
+    warning("This trait is numeric. We are converting the trait to a factor.")
+    trait = factor(trait)
+  }
+
   # make traits a data.table
   trait_dt = data.table(taxa = names(trait), trait = trait)
 
