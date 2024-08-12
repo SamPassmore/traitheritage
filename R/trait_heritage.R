@@ -110,6 +110,8 @@ trait_heritage = function(tree, trait, generation_time){
   ## Add argument tests to the function
   if(any(is.na(trait))) stop("No NA trait values are allowed. ")
 
+  if(is.null(names(trait))) stop("trait must have names that match the taxa. Ensure trait is a named vector.")
+
   # Trait names must match taxa labels
   if(!all(names(trait) %in% tree$tip.label)) stop("Some tips have no matching trait. Make sure all tips have a trait.")
 
