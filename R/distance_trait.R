@@ -30,7 +30,7 @@
 # generation_time = 0.1
 
 
-distance_trait_heritage = function(tree, generation_time, distance_matrix, cut_off){
+distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_off){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
   if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
