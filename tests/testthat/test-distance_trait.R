@@ -62,6 +62,42 @@ test_that("#2. Simple distance test", {
   expect_equal(result$denominator_sum, c(0, 0, 0, 3))
 })
 
+test_that("Same Results Test", {
+
+  t = ape::read.tree(text = "((A),(B,C,D));")
+  t = ape::compute.brlen(t)
+
+  distances = matrix(
+    c(1, 2,
+      2, 1,
+      5, 6,
+      6, 5),
+    byrow = TRUE,
+    ncol = 2,
+    dimnames = list(t$tip.label, c("X", "Y"))
+  )
+  distance_matrix = as.matrix(dist(distances))
+
+  cut_off = 2
+  generation_time = 0.25
+
+  result1 = distance_trait_heritage(
+    t,
+    distance_matrix = distance_matrix,
+    generation_time = generation_time,
+    cut_off = cut_off
+  )
+
+  result2 = distance_trait_heritage(
+    t,
+    distance_matrix = distance_matrix,
+    generation_time = generation_time,
+    cut_off = cut_off
+  )
+
+  expect_equal(result1, result2)
+})
+
 test_that("#2. Simple Error test", {
 
   t = ape::read.tree(text = "((A),(B,C,D));")

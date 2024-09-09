@@ -17,9 +17,9 @@
 
 #' Internal function: Cuts a phylogeny at a given point
 #'
-#' @param tree
-#' @param cut
-#' @param k
+#' @param tree is a dated phylogenetic tree with branch lengths stored as a phylo object (as in the ape package).
+#' @param cut the slice time
+#' @param k number of slices
 #'
 #' @description
 #' This function has been adapted from phyloregion, but included separately here to avoid unnecessary dependencies from that package
