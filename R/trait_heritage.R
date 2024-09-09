@@ -12,8 +12,6 @@
   N <- choose(table(state), 2)
   D <- choose(length(state), 2)
 
-
-
   return(data.table(state = names(N), numerator = c(N), denominator = D))
 }
 
