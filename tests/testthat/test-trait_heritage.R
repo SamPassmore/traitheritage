@@ -151,8 +151,9 @@ test_that("#5 Full pipeline simple test", {
 
   ## Because A & B are singletons, they are not counted.
   ## Then CD are the same so the probability of a shared trait is 1
+  out = trait_heritage(tree, trait, generation_time = 0.2)
   expect_equal(
-    trait_heritage(tree, trait, generation_time = 0.2),
+    out[order(out$generation)],
     structure(
       list(
         generation = c(
