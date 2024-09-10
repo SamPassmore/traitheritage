@@ -30,7 +30,7 @@
 #' @export
 #'
 #' @examples
-.get_clades = function(tree, cut = NULL, k = NULL){
+.get_clades = function(tree, cut = NULL, k = NULL, desc){
   nh <- ape::node.depth.edgelength(tree)
   nh <- max(nh) - nh
   # if (!is.null(k)) {
@@ -53,7 +53,7 @@
   # }
   ind <- which((nh[tree$edge[, 1]] > cut) &
                  (nh[tree$edge[, 2]] <= cut))
-  desc <- phangorn::Descendants(tree)
+
   res <- desc[tree$edge[ind, 2]]
   lapply(res, function(res, tips) tips[res], tree$tip.label)
 }
@@ -71,12 +71,12 @@
 
   # don't calculate any cuts for values the same as the depth of the tree
   cuts = cuts[cuts != max_tree_depth]
-
+  desc = phangorn::Descendants(tree)
   # Identify taxa within each clade for each generation
   clades = lapply(cuts,
                   function(cc) {
                     ## get.clades assumes that taxa start at zero, and cuts go backwards from there.
-                    .clades = .get_clades(tree, cut = cc)
+                    .clades = .get_clades(tree, cut = cc, desc = desc)
                     names(.clades) = seq_along(.clades)
                     ## Stack clades
                     clade_df = stack(.clades)

@@ -46,10 +46,6 @@ p.trait_heritage = function(tree, trait, generation_time){
   # Add trait to splits
   trait_df = stack(trait)
   clades = clades[trait_df, on = c("taxa" = "ind")]
-  # clades = dplyr::full_join(clades, stack(trait), by = "taxa")
-
-  # Use DT for fast calculations.
-  data.table::setDT(clades)
 
   output = clades[, p.clade_probabilities(values), by = c("generation", "clade")]
   output = output[, .(numerator_sum = sum(numerator), denominator_sum = sum(denominator)), by = "generation"]
