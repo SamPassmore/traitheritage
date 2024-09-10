@@ -44,7 +44,9 @@ p.trait_heritage = function(tree, trait, generation_time){
   clades = .slice_tree(tree, generation_time)
 
   # Add trait to splits
-  clades = dplyr::full_join(clades, data.frame(taxa = names(trait), trait = trait), by = "taxa")
+  trait_df = stack(trait)
+  clades = clades[trait_df, on = c("taxa" = "ind")]
+  # clades = dplyr::full_join(clades, stack(trait), by = "taxa")
 
   # Use DT for fast calculations.
   data.table::setDT(clades)
