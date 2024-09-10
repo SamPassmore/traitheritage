@@ -33,26 +33,26 @@
 .get_clades = function(tree, cut = NULL, k = NULL){
   nh <- ape::node.depth.edgelength(tree)
   nh <- max(nh) - nh
-  if (!is.null(k)) {
-    if (k >= Ntip(tree))
-      return(as.list(tree$tip.label))
-    if (k == 1)
-      return(list(tree$tip.label))
-    kids <- lengths(phangorn::Descendants(tree, type = "children"))
-    kids[kids > 0] <- kids[kids > 0] - 1L
-    tmp <- 1
-    eps <- 1e-08
-    ordered_nh <- order(nh, decreasing = TRUE)
-    i <- 1
-    while (tmp < k) {
-      j <- ordered_nh[i]
-      cut <- nh[j] - eps
-      tmp <- tmp + kids[j]
-      i <- i + 1
-    }
-  }
-  ind <- which((nh[tree$edge[, 1]] > cut) & (nh[tree$edge[,
-                                                          2]] <= cut))
+  # if (!is.null(k)) {
+  #   if (k >= Ntip(tree))
+  #     return(as.list(tree$tip.label))
+  #   if (k == 1)
+  #     return(list(tree$tip.label))
+  #   kids <- lengths(phangorn::Descendants(tree, type = "children"))
+  #   kids[kids > 0] <- kids[kids > 0] - 1L
+  #   tmp <- 1
+  #   eps <- 1e-08
+  #   ordered_nh <- order(nh, decreasing = TRUE)
+  #   i <- 1
+  #   while (tmp < k) {
+  #     j <- ordered_nh[i]
+  #     cut <- nh[j] - eps
+  #     tmp <- tmp + kids[j]
+  #     i <- i + 1
+  #   }
+  # }
+  ind <- which((nh[tree$edge[, 1]] > cut) &
+                 (nh[tree$edge[, 2]] <= cut))
   desc <- phangorn::Descendants(tree)
   res <- desc[tree$edge[ind, 2]]
   lapply(res, function(res, tips) tips[res], tree$tip.label)
