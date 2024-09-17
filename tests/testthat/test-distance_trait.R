@@ -29,13 +29,6 @@ test_that("#1. Simple distance test", {
   expect_equal(result$clade_probability[2], 1)
   expect_equal(result$numerator_sum[2], 2)
   expect_equal(result$denominator_sum[2], 2)
-
-  microbenchmark::microbenchmark(distance_trait_heritage(
-         t,
-         distance_matrix = distance_matrix,
-         generation_time = generation_time,
-         cut_off = cut_off
-       ), times = 1000)
 })
 
 test_that("#2. Simple distance test", {
@@ -167,4 +160,44 @@ test_that("#1. Complex distance test", {
   expect_equal(result$clade_probability[nrow(result)], 0.11911011)
   expect_equal(result$numerator_sum[nrow(result)], 953)
   expect_equal(result$denominator_sum[nrow(result)], 8001)
+})
+
+
+test_that("Same Denominator", {
+
+  t = ape::read.tree(text = "((A,B),(C,D));")
+  t = ape::compute.brlen(t)
+
+  trait = c("b", "a", "a", "a")
+  names(trait) = t$tip.label
+
+
+  distances = matrix(
+    c(1, 2,
+      2, 1,
+      5, 6,
+      6, 5),
+    byrow = TRUE,
+    ncol = 2,
+    dimnames = list(t$tip.label, c("X", "Y"))
+  )
+  distance_matrix = as.matrix(dist(distances))
+
+  cut_off = 2
+  generation_time = 0.5
+
+  d_result = distance_trait_heritage(
+    t,
+    distance_matrix = distance_matrix,
+    generation_time = generation_time,
+    cut_off = cut_off
+  )
+
+  t_result = trait_heritage(t, trait, generation_time)
+  denominator = t_result[, .(unique_denominator = unique(denominator)),
+                                     by = list(generation, clade)]
+  denominator = denominator[, .(denominator_sum = sum(unique_denominator)),
+                            by = list(generation)]
+
+  expect_equal(d_result$denominator_sum, denominator$denominator_sum)
 })
