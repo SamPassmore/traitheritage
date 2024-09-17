@@ -29,6 +29,13 @@ test_that("#1. Simple distance test", {
   expect_equal(result$clade_probability[2], 1)
   expect_equal(result$numerator_sum[2], 2)
   expect_equal(result$denominator_sum[2], 2)
+
+  microbenchmark::microbenchmark(distance_trait_heritage(
+         t,
+         distance_matrix = distance_matrix,
+         generation_time = generation_time,
+         cut_off = cut_off
+       ), times = 1000)
 })
 
 test_that("#2. Simple distance test", {
