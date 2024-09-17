@@ -127,42 +127,6 @@ test_that("#2. Simple Error test", {
   ))
 })
 
-
-test_that("#1. Complex distance test", {
-
-  t_file = test_path("testdata", "20240617_CBES_bModelTest_adj-papua_n.mcct.trees")
-  t_file = test_path("testdata", "STATE_140990000.nex")
-  md_file = test_path("testdata", "language_metadata.csv")
-
-  t = ape::read.nexus(t_file)
-  md = read.csv(md_file)
-
-  metadata_dist = md %>%
-    dplyr::filter(!is.na(latitude_hybrid) & !is.na(longitude_hybrid))
-
-  t = ape::keep.tip(t, metadata_dist$PhyID)
-
-  ## Calculate distance on a sphere & convert units to Kms
-  distance_matrix = geosphere::distm(metadata_dist[, c("longitude_hybrid", "latitude_hybrid")],
-                                     fun = geosphere::distHaversine) / 1000
-  dimnames(distance_matrix) = list(metadata_dist$PhyID, metadata_dist$PhyID)
-
-  cut_off = 50
-  generation_time = 25
-
-  result = distance_trait_heritage(
-    t,
-    distance_matrix = distance_matrix,
-    generation_time = generation_time,
-    cut_off = cut_off
-  )
-
-  expect_equal(result$clade_probability[nrow(result)], 0.11911011)
-  expect_equal(result$numerator_sum[nrow(result)], 953)
-  expect_equal(result$denominator_sum[nrow(result)], 8001)
-})
-
-
 test_that("Same Denominator", {
 
   t = ape::read.tree(text = "((A,B),(C,D));")
@@ -200,4 +164,39 @@ test_that("Same Denominator", {
                             by = list(generation)]
 
   expect_equal(d_result$denominator_sum, denominator$denominator_sum)
+})
+
+
+test_that("#1. Complex distance test", {
+
+  t_file = test_path("testdata", "20240617_CBES_bModelTest_adj-papua_n.mcct.trees")
+  t_file = test_path("testdata", "STATE_140990000.nex")
+  md_file = test_path("testdata", "language_metadata.csv")
+
+  t = ape::read.nexus(t_file)
+  md = read.csv(md_file)
+
+  metadata_dist = md %>%
+    dplyr::filter(!is.na(latitude_hybrid) & !is.na(longitude_hybrid))
+
+  t = ape::keep.tip(t, metadata_dist$PhyID)
+
+  ## Calculate distance on a sphere & convert units to Kms
+  distance_matrix = geosphere::distm(metadata_dist[, c("longitude_hybrid", "latitude_hybrid")],
+                                     fun = geosphere::distHaversine) / 1000
+  dimnames(distance_matrix) = list(metadata_dist$PhyID, metadata_dist$PhyID)
+
+  cut_off = 50
+  generation_time = 25
+
+  result = distance_trait_heritage(
+    t,
+    distance_matrix = distance_matrix,
+    generation_time = generation_time,
+    cut_off = cut_off
+  )
+
+  expect_equal(result$clade_probability[nrow(result)], 0.11911011)
+  expect_equal(result$numerator_sum[nrow(result)], 953)
+  expect_equal(result$denominator_sum[nrow(result)], 8001)
 })

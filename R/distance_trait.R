@@ -18,6 +18,7 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   dm = data.frame(value = distance_matrix[sequence(s, seq.int(1L, length(distance_matrix), n))],
                   row = gl(n, 1L, labels = nms[[1L]])[sequence(s, 1L)],
                   col = rep.int(gl(n, 1L, labels = nms[[2L]]), s))
+  dm = as.data.table(dm)
 
   dm$trait = dm$value < cut_off
 
@@ -30,13 +31,14 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   setkey(generation_df, generation)
 
   output = lapply(generations, function(g) {
-    generation_df = generation_df[generation_df$generation == g]
-    clade_sets <- unique(generation_df$clade)
+    g_df = generation_df[generation == g]
+    clade_sets = unique(generation_df$clade)
 
     clade_result <- sapply(clade_sets, function(cs) {
-      clade_taxa = generation_df$taxa[generation_df$clade == cs]
-      trait = dm$trait[dm$row %in% clade_taxa & dm$col %in% clade_taxa]
+      clade_taxa = g_df$taxa[g_df$clade == cs]
 
+      trait = dm$trait[dm$row %in% clade_taxa & dm$col %in% clade_taxa]
+      trait = dm[row %in% clade_taxa & col %in% clade_taxa, .(trait)]
       if (length(trait) >= 1) {
         numerator = sum(trait)
         denominator = length(trait)
