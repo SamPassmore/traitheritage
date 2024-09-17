@@ -32,13 +32,14 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
 
   output = lapply(generations, function(g) {
     g_df = generation_df[generation == g]
+
     clade_sets = unique(generation_df$clade)
 
     clade_result <- sapply(clade_sets, function(cs) {
       clade_taxa = g_df$taxa[g_df$clade == cs]
 
       trait = dm$trait[dm$row %in% clade_taxa & dm$col %in% clade_taxa]
-      trait = dm[row %in% clade_taxa & col %in% clade_taxa, .(trait)]
+
       if (length(trait) >= 1) {
         numerator = sum(trait)
         denominator = length(trait)
