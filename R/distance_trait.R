@@ -38,7 +38,8 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
     clade_result <- sapply(clade_sets, function(cs) {
       clade_taxa = g_df$taxa[g_df$clade == cs]
 
-      trait = dm$trait[dm$row %in% clade_taxa & dm$col %in% clade_taxa]
+      # trait = dm$trait[dm$row %in% clade_taxa & dm$col %in% clade_taxa]
+      trait = dm[row %chin% clade_taxa & col %chin% clade_taxa, .(trait)]
 
       if (length(trait) >= 1) {
         numerator = sum(trait)
@@ -96,7 +97,7 @@ get.prob <- function(cl.i, T1, T2) {
 }
 
 distance_trait_heritage2 = function(tree, generation_time, distance_matrix, cut_off){
-
+  require(foreach)
   # 1. Calculate tree cuts
   clades = .slice_tree(tree, generation_time)
 

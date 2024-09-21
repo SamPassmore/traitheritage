@@ -16,6 +16,7 @@ Imports:
     ape,
     data.table,
     dplyr,
+    foreach,
     phangorn,
     reshape2
 RoxygenNote: 7.2.3
