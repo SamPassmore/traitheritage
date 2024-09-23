@@ -196,7 +196,7 @@ test_that("#1. Complex distance test", {
       cut_off = cut_off
     )
   toc()
-  expect_equal(result$clade_probability[nrow(result)], 0.11911011)
-  expect_equal(result$numerator_sum[nrow(result)], 953)
-  expect_equal(result$denominator_sum[nrow(result)], 8001)
+  expect_equal(result$clade_probability[result$generation == "g_62975"], 0.11911011)
+  expect_equal(result$numerator_sum[result$generation == "g_62975"], 953)
+  expect_equal(result$denominator_sum[result$generation == "g_62975"], 8001)
 })
