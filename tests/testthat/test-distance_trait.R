@@ -188,7 +188,7 @@ test_that("#1. Complex distance test", {
 
   cut_off = 50
   generation_time = 25
-  p1 = profvis({
+
     result = distance_trait_heritage(
       t,
       distance_matrix = distance_matrix,
