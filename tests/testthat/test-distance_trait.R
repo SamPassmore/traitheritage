@@ -57,7 +57,7 @@ test_that("#2. Simple distance test", {
     cut_off = cut_off
   )
 
-  expect_equal(result$clade_probability, c(NaN, NaN, NaN, 0.333333333333333))
+  expect_equal(result$clade_probability, c(0, 0, 0, 0.333333333333333))
   expect_equal(result$numerator_sum, c(0, 0, 0, 1))
   expect_equal(result$denominator_sum, c(0, 0, 0, 3))
 })
@@ -188,15 +188,14 @@ test_that("#1. Complex distance test", {
 
   cut_off = 50
   generation_time = 25
-  p1 = profvis({
+  tic()
     result = distance_trait_heritage(
       t,
       distance_matrix = distance_matrix,
       generation_time = generation_time,
       cut_off = cut_off
     )
-  })
-
+  toc()
   expect_equal(result$clade_probability[nrow(result)], 0.11911011)
   expect_equal(result$numerator_sum[nrow(result)], 953)
   expect_equal(result$denominator_sum[nrow(result)], 8001)
