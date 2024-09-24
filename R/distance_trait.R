@@ -6,17 +6,20 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
   if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
 
-  # Names to numbers
+  # clades sets at each node
+  descendants = phangorn::Descendants(tree)
+  names(descendants) = seq_along(descendants)
+  # clades with more than one taxa
+  desc_multi = descendants[sapply(descendants, length) > 1]
+
+  desc_pairs = lapply(desc_multi, function(x) data.table(t(combn(x, 2))))
+  dp_df = data.table::rbindlist(desc_pairs, idcol= "node")
+  dp_df[,idx := do.call(paste, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
+
+  # Create alias names for taxa
   ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
 
-  # 1. Calculate tree cuts
-  clades = .slice_tree(tree, generation_time)
-  clades = clades[ref, on = .(taxa)]
-  clades = data.table(clades)
-
-  # 2. Calculate trait distance
-  ## This solution is taken from https://stackoverflow.com/a/76731093/1544746
-  ## Which notes that it will not work for R < 4.0.0
+  # long distance
   n = nrow(distance_matrix)
   s = seq_len(n) - 1L
   nms = dimnames(distance_matrix)
@@ -24,47 +27,47 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
                   row = gl(n, 1L, labels = nms[[1L]])[sequence(s, 1L)],
                   col = rep.int(gl(n, 1L, labels = nms[[2L]]), s))
   dm = as.data.table(dm)
-
   dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
 
   paste_sort = function(ind, i.ind){
     apply(cbind(ind, i.ind), 1, function(x) paste(sort(x), collapse=" "))
   }
 
-  # Paste indexes together for subsetting
   dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("ind", "i.ind")]
 
   # Calculate cut-off
   dm[, trait := value < cut_off,]
 
-  # 3. For each generation, calculate the probability of a shared trait within each clade
-  generations = unique(clades$generation)
+  dp_df[dm, on = "idx",  trait := i.trait]
 
-  # Use lapply for generations and sapply for clade_sets
-  generation_df = as.data.table(clades)
-  # set key on data.table for speeding up subsetting
-  # setkey(generation_df, generation)
+  node_dt = dp_df[, list(numerator_sum = sum(trait),
+                         denominator_sum = length(trait)), by = node]
+  node_dt[, clade_probability := numerator_sum / denominator_sum]
 
-  ## all pairs by clade and generation
-  # generation_df = generation_df[, .(idx = list(ind)), by = .(generation, clade)][lengths(idx) > 1]
-  # generation_df = generation_df[, .(idx = sapply(idx, function(x) combn(x, 2, paste0, collapse = " "))), by = .(generation, clade)]
-  generation_df = generation_df[, .(idx = combn(ind, min(2, .N), paste0, collapse = " ", simplify = TRUE), count = .N), by = .(generation, clade)][count > 1]
+  # Identify which clades are under a ceratin time point
+  max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
+  cuts = head(seq(0, max_tree_depth, by = generation_time), -1)
+  nh <- ape::node.depth.edgelength(tree)
+  nh <- max(nh) - nh
 
-  # how to join where I have filtered out all clades where there is only one taxa?
-  generation_df[dm[,.(idx, trait)], on = "idx", trait := i.trait]
+  probs = lapply(cuts, function(cut){
+    ind <- which((nh[tree$edge[, 1]] > cut) &
+                   (nh[tree$edge[, 2]] <= cut))
+    res = names(descendants[tree$edge[ind, 2]])
+    ndt = node_dt[node %in% res]
+    oo = data.table(numerator_sum = sum(ndt$numerator_sum),
+                    denominator_sum = sum(ndt$denominator_sum))
+    oo[,clade_probability := numerator_sum / denominator_sum]
+  })
+  names(probs) = paste0("g_", cuts)
 
-  output_dt = generation_df[, list(numerator_sum = sum(trait),
-                               denominator_sum = length(trait)), by = generation]
-  output_dt[, clade_probability := numerator_sum / denominator_sum]
-
-  generations_dt = data.table(generation = generations)
-  oo = output_dt[generations_dt, on = "generation"]
+  pp = data.table::rbindlist(probs, idcol = "generation")
 
   # Change all NA values to 0.
   # I assume the only time this arises is in singleton clades
-  oo[is.na(oo)] = 0
+  pp[is.na(pp)] = 0
 
-  return(oo)
+  return(pp)
 }
 
 # https://stackoverflow.com/questions/39005958/r-how-to-get-row-column-subscripts-of-matched-elements-from-a-distance-matri
