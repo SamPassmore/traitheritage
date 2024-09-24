@@ -46,8 +46,9 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   # setkey(generation_df, generation)
 
   ## all pairs by clade and generation
-  generation_df = generation_df[, .(idx = list(ind)), by = .(generation, clade)][lengths(idx) > 1]
-  generation_df = generation_df[, .(idx = sapply(idx, function(x) combn(x, 2, paste0, collapse = " "))), by = .(generation, clade)]
+  # generation_df = generation_df[, .(idx = list(ind)), by = .(generation, clade)][lengths(idx) > 1]
+  # generation_df = generation_df[, .(idx = sapply(idx, function(x) combn(x, 2, paste0, collapse = " "))), by = .(generation, clade)]
+  generation_df = generation_df[, .(idx = combn(ind, min(2, .N), paste0, collapse = " ", simplify = TRUE), count = .N), by = .(generation, clade)][count > 1]
 
   # how to join where I have filtered out all clades where there is only one taxa?
   generation_df[dm[,.(idx, trait)], on = "idx", trait := i.trait]
