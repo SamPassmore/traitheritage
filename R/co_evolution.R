@@ -63,7 +63,7 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
                          lang_nodist = sum(lang_trait == TRUE & dist_trait == FALSE),
                          nolang_dist = sum(lang_trait == FALSE & dist_trait == TRUE),
                          nolang_nodist = sum(lang_trait == FALSE & dist_trait == FALSE),
-                         denominator_sum = length(trait)),
+                         denominator_sum = length(lang_trait)),
                          by = node]
   node_dt[, `:=`(p_lang_dist = lang_dist / denominator_sum,
                  p_lang_nodist = lang_nodist / denominator_sum,
