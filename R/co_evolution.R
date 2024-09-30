@@ -1,28 +1,5 @@
 ## trait co-evolution
 
-t = ape::read.tree(text = "((A,B),(C,D));")
-tree = ape::compute.brlen(t)
-
-trait = c("b", "a", "a", "a")
-names(trait) = t$tip.label
-
-
-distances = matrix(
-  c(1, 2,
-    2, 1,
-    5, 6,
-    6, 5),
-  byrow = TRUE,
-  ncol = 2,
-  dimnames = list(t$tip.label, c("X", "Y"))
-)
-distance_matrix = as.matrix(dist(distances))
-
-cut_off = 2
-generation_time = 0.5
-
-trait_coevolution(tree, trait, distance_matrix, generation_time, cut_off)
-
 trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_off){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
