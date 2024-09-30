@@ -1,5 +1,16 @@
 ## trait co-evolution
 
+#' Calculate the relative probability of a shared trait and distance
+#'
+#' @param tree a phylogenetic tree of classe phylo
+#' @param trait a numeric or character trait for each taxa
+#' @param distance_matrix a n by n matrix of distances between all taxa
+#' @param generation_time the number of generations to calculate the probaiblity for across the phylogeny
+#' @param cut_off The distance cut off value (used to discretize distance)
+#'
+#' @return a list. time_df shows the probability for each paired category over time. pairs_df shows the data for each viable pair in the dataset.
+#' @export
+#'
 trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_off){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")

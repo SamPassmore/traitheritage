@@ -1,37 +1,13 @@
 # ## This function will calculate the within and between group probability for a given pair of traits
-# library(ape)
-# library(data.table)
-# # fake data
-# tree = ape::read.tree(text = "((t1, t2, t3, t4, t5),
-#                                 (t6, t7, t8, t9, t10),
-#                                 (t11, t12, t13, t14, t15));")
-# tree = ape::compute.brlen(tree)
-#
-# # Traits can be a, b, or c
-# # trait = factor(c("a", "a", "a", "b", "c", "b", "b", "a", "c", "c", "a", "b", "a", "b", "c"))
-# trait = factor(c("a", "a", "a", "a", "a", "b", "b", "b", "b", "b", "c", "c", "c", "c", "c"))
-# # trait = factor(c("a", "b", "c", "d", "e", "a", "b", "c", "d", "e", "a", "b", "c", "d", "e"))
-# trait_levels = levels(trait)
-# names(trait) = tree$tip.label
-#
-#
-# ### Within group variance
-# within_variance = function(){}
-#
-# ### Between group variance
-# between_variance = function(){}
 
 ## Main function
 #' Calculate within and between variance for a trait in a tree
 #'
-#' @param tree
-#' @param generation_time
-#' @param trait
+#' @param tree a phylogenetic tree
+#' @param generation_time the generation time to calcualte across the phylogeny
+#' @param trait the trait of interest (numeric or character)
 #'
-#' @return
-#' @export
-#'
-#' @examples
+
 within_between = function(tree, generation_time, trait){
 
   if(is.null(names(trait)) | !all(tree$tip.label %in% names(trait))){

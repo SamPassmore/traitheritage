@@ -4,9 +4,11 @@
 \alias{.clade_probabilities}
 \title{Internal function: Calculate probabilities of matching states within a clade}
 \usage{
-.clade_probabilities(clade_states)
+.clade_probabilities(state)
 }
 \arguments{
+\item{state}{the state to condition on}
+
 \item{clade_states}{A named vector of trait values}
 }
 \value{

@@ -26,10 +26,8 @@
 #' Please cite Daru, B. H., Karunarathne P., & Schliep K. (2020), phyloregion: R package for biogeographic regionalization and macroecology. Methods in Ecology and Evolution, 11: 1483-1491. doi:10.1111/2041-210X.13478
 #' if using this function.
 #'
-#' @return
-#' @export
+#' @return a data frame showing the clades for each taxa
 #'
-#' @examples
 .get_clades = function(tree, cut = NULL, k = NULL, desc){
   nh <- ape::node.depth.edgelength(tree)
   nh <- max(nh) - nh
