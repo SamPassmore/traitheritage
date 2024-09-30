@@ -1,7 +1,7 @@
 ## trait co-evolution
 
 t = ape::read.tree(text = "((A,B),(C,D));")
-t = ape::compute.brlen(t)
+tree = ape::compute.brlen(t)
 
 trait = c("b", "a", "a", "a")
 names(trait) = t$tip.label
@@ -21,10 +21,9 @@ distance_matrix = as.matrix(dist(distances))
 cut_off = 2
 generation_time = 0.5
 
-
+trait_coevolution(tree, trait, distance_matrix, generation_time, cut_off)
 
 trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_off){
-# ## Distance function
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
   if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
@@ -63,14 +62,25 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
 
   dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("row_num", "col_num")]
 
-  # Calculate cut-off
-  dm[, trait := value < cut_off,]
+  # Calculate distance cut-off
+  dm[, dist_trait := value < cut_off,]
+  # calculate trait similarity
+  dm[, lang_trait := trait1 == trait2,]
 
-  dp_df[dm, on = "idx",  trait := i.trait]
+  dp_df = dp_df[dm, on = "idx"]
 
-  node_dt = dp_df[, list(numerator_sum = sum(trait),
-                         denominator_sum = length(trait)), by = node]
-  node_dt[, clade_probability := numerator_sum / denominator_sum]
+  ## Possible conditions
+  ## D & L, ND & L, D & NL, ND & NL
+  node_dt = dp_df[, list(lang_dist = sum(lang_trait & dist_trait),
+                         lang_nodist = sum(lang_trait == TRUE & dist_trait == FALSE),
+                         nolang_dist = sum(lang_trait == FALSE & dist_trait == TRUE),
+                         nolang_nodist = sum(lang_trait == FALSE & dist_trait == FALSE),
+                         denominator_sum = length(trait)),
+                         by = node]
+  node_dt[, `:=`(p_lang_dist = lang_dist / denominator_sum,
+                 p_lang_nodist = lang_nodist / denominator_sum,
+                 p_nolang_dist = nolang_dist / denominator_sum,
+                 p_nolang_nodist = nolang_nodist / denominator_sum)]
 
   # Identify which clades are under a ceratin time point
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
@@ -83,9 +93,15 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
                    (nh[tree$edge[, 2]] <= cut))
     res = names(descendants[tree$edge[ind, 2]])
     ndt = node_dt[node %in% res]
-    oo = data.table(numerator_sum = sum(ndt$numerator_sum),
+    oo = data.table(lang_dist = sum(ndt$lang_dist),
+                    lang_nodist = sum(ndt$lang_nodist),
+                    nolang_dist = sum(ndt$nolang_dist),
+                    nolang_nodist = sum(ndt$nolang_nodist),
                     denominator_sum = sum(ndt$denominator_sum))
-    oo[,clade_probability := numerator_sum / denominator_sum]
+    oo[, `:=`(p_lang_dist = lang_dist / denominator_sum,
+              p_lang_nodist = lang_nodist / denominator_sum,
+              p_nolang_dist = nolang_dist / denominator_sum,
+              p_nolang_nodist = nolang_nodist / denominator_sum)]
   })
   names(probs) = paste0("g_", cuts)
 
@@ -95,152 +111,5 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   # I assume the only time this arises is in singleton clades
   pp[is.na(pp)] = 0
 
-  return(pp)
+  return(list(time_df = pp, pairs_df = dp_df))
 }
-
-# https://stackoverflow.com/questions/39005958/r-how-to-get-row-column-subscripts-of-matched-elements-from-a-distance-matri
-finv <- function (k, dist_obj) {
-  if (!inherits(dist_obj, "dist"))
-    stop("please provide a 'dist' object")
-  n <- attr(dist_obj, "Size")
-  valid <- (k >= 1) & (k <= n * (n - 1) / 2)
-  k_valid <- k[valid]
-  j <- rep.int(NA_real_, length(k))
-  j[valid] <-
-    floor(((2 * n + 1) - sqrt((2 * n - 1) ^ 2 - 8 * (k_valid - 1))) / 2)
-  i <- j + k - (2 * n - j) * (j - 1) / 2
-  data.frame(i = i, j = j)
-}
-
-get.prob <- function(cl.i, T1, T2) {
-  A <- cl.i[T1]
-  B <- cl.i[T2]
-  nc <- ncol(cl.i)
-  D0 <- apply(cl.i[, 2:nc], 2, function(x) choose(table(x), 2))
-  D <- sapply(D0, sum)
-  N <- colSums(A[, -1] == B[, -1])
-  return(list(numerator = N, denominator = D))
-}
-
-distance_trait_heritage2 = function(tree, generation_time, distance_matrix, cut_off){
-  require(foreach)
-  # 1. Calculate tree cuts
-  clades = .slice_tree(tree, generation_time)
-
-  # 2. Identify which pairs are under the cut-off
-  taxa.numeric = as.numeric(factor(tree$tip.label))
-  tm_df = data.table(taxa.numeric, tree$tip.label)
-
-  dist.keep <- which(as.dist(distance_matrix) < cut_off)
-
-  arr.ind <- finv(dist.keep, as.dist(distance_matrix))
-  dist.dt <- data.table::data.table(taxa1 = taxa.numeric[arr.ind$i],
-                                    taxa2 = taxa.numeric[arr.ind$j])
-
-  data.table::setDT(clades)
-  # clades[, taxa.numeric := as.numeric(gsub("t", "", taxa))]
-
-  # create chunks of 100 gens
-  cU <- clades[, unique(generation)]
-  cN <- length(cU)
-  ctz <- seq(100, cN + 100, 100)
-  if (max(ctz) != cN)
-    ctz <- c(ctz, cN)
-  cl.chunk <- foreach::foreach (c.u = ctz) %do% {
-    c.l <- c.u - 99
-    IND <- cU[c.l:c.u]
-    data.table::dcast(clades[generation %in% IND[!is.na(IND)]],
-                      formula =  taxa.numeric ~ generation,
-                      value.var = "clade")
-  }
-
-  xx <- foreach::foreach(i = cl.chunk, j = 1:length(cl.chunk)) %do% {
-    print(j)
-    get.prob(cl.i = i,
-             T1 = dist.dt$taxa1,
-             T2 = dist.dt$taxa2)
-  }
-
-  output <- clades[1:10, get.prob(trait, dist.dt), by = c("generation", "clade")]
-
-  output[, .(clade_probability = sum(numerator) / sum(denominator)), by = "generation"]
-
-  # Return
-  return(output)
-}
-
-# https://stackoverflow.com/questions/39005958/r-how-to-get-row-column-subscripts-of-matched-elements-from-a-distance-matri
-finv <- function (k, dist_obj) {
-  if (!inherits(dist_obj, "dist"))
-    stop("please provide a 'dist' object")
-  n <- attr(dist_obj, "Size")
-  valid <- (k >= 1) & (k <= n * (n - 1) / 2)
-  k_valid <- k[valid]
-  j <- rep.int(NA_real_, length(k))
-  j[valid] <-
-    floor(((2 * n + 1) - sqrt((2 * n - 1) ^ 2 - 8 * (k_valid - 1))) / 2)
-  i <- j + k - (2 * n - j) * (j - 1) / 2
-  data.frame(i = i, j = j)
-}
-
-get.prob <- function(cl.i, T1, T2) {
-  A <- cl.i[T1]
-  B <- cl.i[T2]
-  nc <- ncol(cl.i)
-  D0 <- apply(cl.i[, 2:nc], 2, function(x) choose(table(x), 2))
-  D <- sapply(D0, sum)
-  N <- colSums(A[, -1] == B[, -1])
-  return(list(numerator = N, denominator = D))
-}
-
-distance_trait_heritage2 = function(tree, generation_time, distance_matrix, cut_off){
-  require(foreach)
-  # 1. Calculate tree cuts
-  clades = .slice_tree(tree, generation_time)
-
-  # 2. Identify which pairs are under the cut-off
-  taxa.numeric = as.numeric(factor(tree$tip.label))
-  tm_df = data.table(taxa.numeric, tree$tip.label)
-
-  dist.keep <- which(as.dist(distance_matrix) < cut_off)
-
-  arr.ind <- finv(dist.keep, as.dist(distance_matrix))
-  dist.dt <- data.table::data.table(taxa1 = taxa.numeric[arr.ind$i],
-                                    taxa2 = taxa.numeric[arr.ind$j])
-
-  data.table::setDT(clades)
-  # clades[, taxa.numeric := as.numeric(gsub("t", "", taxa))]
-
-  # create chunks of 100 gens
-  cU <- clades[, unique(generation)]
-  cN <- length(cU)
-  ctz <- seq(100, cN + 100, 100)
-  if (max(ctz) != cN)
-    ctz <- c(ctz, cN)
-  cl.chunk <- foreach::foreach (c.u = ctz) %do% {
-    c.l <- c.u - 99
-    IND <- cU[c.l:c.u]
-    data.table::dcast(clades[generation %in% IND[!is.na(IND)]],
-                      formula =  taxa.numeric ~ generation,
-                      value.var = "clade")
-  }
-
-  xx <- foreach::foreach(i = cl.chunk, j = 1:length(cl.chunk)) %do% {
-    print(j)
-    get.prob(cl.i = i,
-             T1 = dist.dt$taxa1,
-             T2 = dist.dt$taxa2)
-  }
-
-  output <- clades[1:10, get.prob(trait, dist.dt), by = c("generation", "clade")]
-
-  output[, .(clade_probability = sum(numerator) / sum(denominator)), by = "generation"]
-
-  # Return
-  return(output)
-}
-
-
-
-}
-
