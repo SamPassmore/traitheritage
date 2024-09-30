@@ -1,7 +1,6 @@
 # ## Distance function
 
 distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_off){
-
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
   if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
   if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
@@ -19,11 +18,6 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   # Create alias names for taxa
   ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
 
-  trait = data.table(taxa = names(trait), trait = trait)
-  ref[trait, on = "taxa", trait := trait]
-  dp_df[]
-
-
   # long distance
   n = nrow(distance_matrix)
   s = seq_len(n) - 1L
@@ -32,8 +26,7 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
                   row = gl(n, 1L, labels = nms[[1L]])[sequence(s, 1L)],
                   col = rep.int(gl(n, 1L, labels = nms[[2L]]), s))
   dm = as.data.table(dm)
-  # dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
-  dm = dm[ref, on = "row == taxa", `:=`(trait1 = trait, row_num = ind)][ref, on = "col == taxa", `:=`(trait2 = trait, col_num = ind)]
+  dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
 
   paste_sort = function(ind, i.ind){
     apply(cbind(ind, i.ind), 1, function(x) paste(sort(x), collapse=" "))
@@ -98,51 +91,4 @@ get.prob <- function(cl.i, T1, T2) {
   D <- sapply(D0, sum)
   N <- colSums(A[, -1] == B[, -1])
   return(list(numerator = N, denominator = D))
-}
-
-distance_trait_heritage2 = function(tree, generation_time, distance_matrix, cut_off){
-  require(foreach)
-  # 1. Calculate tree cuts
-  clades = .slice_tree(tree, generation_time)
-
-  # 2. Identify which pairs are under the cut-off
-  taxa.numeric = as.numeric(factor(tree$tip.label))
-  tm_df = data.table(taxa.numeric, tree$tip.label)
-
-  dist.keep <- which(as.dist(distance_matrix) < cut_off)
-
-  arr.ind <- finv(dist.keep, as.dist(distance_matrix))
-  dist.dt <- data.table::data.table(taxa1 = taxa.numeric[arr.ind$i],
-                                    taxa2 = taxa.numeric[arr.ind$j])
-
-  data.table::setDT(clades)
-  # clades[, taxa.numeric := as.numeric(gsub("t", "", taxa))]
-
-  # create chunks of 100 gens
-  cU <- clades[, unique(generation)]
-  cN <- length(cU)
-  ctz <- seq(100, cN + 100, 100)
-  if (max(ctz) != cN)
-    ctz <- c(ctz, cN)
-  cl.chunk <- foreach::foreach (c.u = ctz) %do% {
-    c.l <- c.u - 99
-    IND <- cU[c.l:c.u]
-    data.table::dcast(clades[generation %in% IND[!is.na(IND)]],
-                      formula =  taxa.numeric ~ generation,
-                      value.var = "clade")
-  }
-
-  xx <- foreach::foreach(i = cl.chunk, j = 1:length(cl.chunk)) %do% {
-    print(j)
-    get.prob(cl.i = i,
-             T1 = dist.dt$taxa1,
-             T2 = dist.dt$taxa2)
-  }
-
-  output <- clades[1:10, get.prob(trait, dist.dt), by = c("generation", "clade")]
-
-  output[, .(clade_probability = sum(numerator) / sum(denominator)), by = "generation"]
-
-  # Return
-  return(output)
 }
