@@ -27,12 +27,6 @@ permute_trait_heritage = function(tree, trait, generation_time, n_permutations =
   list(true = true, permuted = permuted)
 }
 
-p.clade_probabilities <- function(TS) {
-  N <- sum(choose(table(TS), 2))
-  D <- choose(length(TS), 2)
-  return(list(numerator = N, denominator = D))
-}
-
 p.trait_heritage = function(tree, trait, generation_time) {
   ## Add argument tests to the function
   if (any(is.na(trait)))
