@@ -39,7 +39,7 @@ test_that("#5 Full pipeline simple test", {
                    numerator_sum = c(0, 0, 1, 1, 3),
                    denominator_sum = c(0,
                                        0, 1, 1, 3),
-                   clade_probability = c(NaN, NaN, 1, 1, 1)
+                   clade_probability = c(0, 0, 1, 1, 1)
                  ),
                  class = c("data.table", "data.frame"),
                  row.names = c(NA,-5L)
@@ -79,6 +79,6 @@ test_that("#6 No matches", {
 
   result = p.trait_heritage(t, trait, generation_time = 0.2)
 
-  expect_equal(result$clade_probability, c(NaN, NaN, 0, 0, 0))
+  expect_equal(result$clade_probability, c(0, 0, 0, 0, 0))
 
 })

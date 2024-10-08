@@ -26,10 +26,10 @@ test_that("Simple test", {
 
   expect_equal(
     result$time_df$denominator_sum,
-    c(0, 4))
+    c(0, 2))
   expect_equal(
     result$time_df$p_lang_dist,
-    c(0, 0.25))
+    c(0, 0.5))
   expect_equal(
     result$pairs_df$dist_trait,
     c(T, T, F, F, F, F, T, T))
