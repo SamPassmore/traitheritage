@@ -28,45 +28,50 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   dm = as.data.table(dm)
   dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
 
-  paste_sort = function(ind, i.ind){
-    apply(cbind(ind, i.ind), 1, function(x) paste(sort(x), collapse=" "))
-  }
-
   dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("ind", "i.ind")]
 
   # Calculate cut-off
   dm[, trait := value < cut_off,]
 
+  # join distance cut off to nodes table
   dp_df[dm, on = "idx",  trait := i.trait]
 
-  node_dt = dp_df[, list(numerator_sum = sum(trait),
-                         denominator_sum = length(trait)), by = node]
-  node_dt[, clade_probability := numerator_sum / denominator_sum]
-
-  # Identify which clades are under a ceratin time point
+  # Identify which clades are under a certain time point
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
   cuts = head(seq(0, max_tree_depth, by = generation_time), -1)
   nh <- ape::node.depth.edgelength(tree)
   nh <- max(nh) - nh
 
-  probs = lapply(cuts, function(cut){
-    ind <- which((nh[tree$edge[, 1]] > cut) &
-                   (nh[tree$edge[, 2]] <= cut))
-    res = names(descendants[tree$edge[ind, 2]])
-    ndt = node_dt[node %in% res]
-    oo = data.table(numerator_sum = sum(ndt$numerator_sum),
-                    denominator_sum = sum(ndt$denominator_sum))
-    oo[,clade_probability := numerator_sum / denominator_sum]
-  })
-  names(probs) = paste0("g_", cuts)
+  # add times to dp_df
+  nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = max(nh) - ape::node.depth.edgelength(tree))
+  nh_dt = nh_dt[-(1:(tree$Nnode + 1)),] # remove tips
+  dp_df = dp_df[nh_dt, on = "node"]
 
-  pp = data.table::rbindlist(probs, idcol = "generation")
+  # Calculate shared traits by node times and order by time
+  node_dt = dp_df[, list(numerator_sum = sum(trait),
+                         denominator_sum = length(trait)), by = time][order(time)]
+  node_dt[, clade_probability := numerator_sum / denominator_sum]
+
+  # get start end times for nodes and desired cuts
+  node_times = node_dt[, .(start = time, end = c(time[-1], max(time) + generation_time))][,repeats := floor((end - start) / generation_time)]
+  setkey(node_times, start, end)
+  cuts_dt = data.table(start = cuts, end = c(cuts[-1], max(cuts) + generation_time))
+  setkey(cuts_dt, start, end)
+
+  cuts_nodes = data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
+
+  # Create probability table
+  probs = merge.data.table(cuts_nodes, node_dt, by.x = "start", by.y = "time", all = TRUE)
+  probs$generation = paste0("g_", probs$i.start)
+
+  # Pick columns of interest
+  probs = probs[,c("generation", "numerator_sum", "denominator_sum", "clade_probability")]
 
   # Change all NA values to 0.
   # I assume the only time this arises is in singleton clades
-  pp[is.na(pp)] = 0
+  probs[is.na(probs)] = 0
 
-  return(pp)
+  return(probs)
 }
 
 # https://stackoverflow.com/questions/39005958/r-how-to-get-row-column-subscripts-of-matched-elements-from-a-distance-matri
@@ -91,4 +96,8 @@ get.prob <- function(cl.i, T1, T2) {
   D <- sapply(D0, sum)
   N <- colSums(A[, -1] == B[, -1])
   return(list(numerator = N, denominator = D))
+}
+
+paste_sort = function(ind, i.ind){
+  apply(cbind(ind, i.ind), 1, function(x) paste(sort(x), collapse=" "))
 }
