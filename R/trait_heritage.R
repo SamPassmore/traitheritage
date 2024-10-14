@@ -79,7 +79,7 @@ trait_heritage = function(tree, trait, generation_time){
   probs[is.na(probs)] = 0
 
   ## make summary
-  summary = probs[,.(numerator_sum = sum(numerator_sum), denominator_sum = sum(denominator_sum)),
+  summary = probs[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
                   by = "generation"][,clade_probability := numerator_sum / denominator_sum]
 
   return(list(

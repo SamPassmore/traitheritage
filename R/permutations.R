@@ -9,8 +9,6 @@
 #' @export
 #'
 permute_trait_heritage = function(tree, trait, generation_time, n_permutations = 100){
-  # True data results
-  true = trait_heritage(tree, trait, generation_time)
 
   # Permuted results
   permuted_list = lapply(1:n_permutations, function(i){
@@ -20,9 +18,14 @@ permute_trait_heritage = function(tree, trait, generation_time, n_permutations =
   })
   names(permuted_list) = paste0("p_", 1:n_permutations)
 
-  permuted = do.call(rbind, permuted_list)
-  permuted$iteration = lapply(strsplit(row.names(permuted), "\\."), '[[', 1)
-  rownames(permuted) = NULL
+  by_trait = lapply(permuted_list, "[[", 1)
+  p_summary = lapply(permuted_list, "[[", 2)
 
-  list(true = true, permuted = permuted)
+  permuted_bytrait = data.table::rbindlist(by_trait, idcol = "iteration")
+  permuted_summary = data.table::rbindlist(p_summary, idcol = "iteration")
+
+  permuted_bytrait$iteration = lapply(strsplit(row.names(permuted_bytrait), "\\."), '[[', 1)
+  permuted_summary$iteration = lapply(strsplit(row.names(permuted_summary), "\\."), '[[', 1)
+
+  return(list(by_trait = permuted_bytrait, summary = permuted_summary))
 }
