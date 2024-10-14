@@ -12,10 +12,9 @@ test_that("#5 Full pipeline simple test", {
   expect_equal(result$summary,
                structure(
                  list(
-                   generation = c(0.2, 0.4, 0.6, 0.8. 1.0),
-                   numerator_sum = c(0, 0, 1, 1, 3),
-                   denominator_sum = c(0,
-                                       0, 1, 1, 3),
+                   generation = c(0.2, 0.4, 0.6, 0.8, 1.0),
+                   numerator_sum = c(0, 1, 1, 3, 3),
+                   denominator_sum = c(0, 0, 1, 1, 3),
                    clade_probability = c(0, 0, 1, 1, 1)
                  ),
                  class = c("data.table", "data.frame"),

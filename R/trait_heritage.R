@@ -58,12 +58,16 @@ trait_heritage = function(tree, trait, generation_time){
   denominator = dp_df[, .(denominator_sum = .N), by = c("time")]
 
   # get start end times for nodes and desired cuts
+  # node_times = numerator[, .(start = c(0, time), end = c(time, time[.N] + generation_time))]
   node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
   setkey(node_times, start, end)
   cuts_dt = data.table(start = cuts, end = cuts)
   setkey(cuts_dt, start, end)
 
   cuts_nodes = data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
+
+  # special case for root node
+  cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
 
   # Create probability table
   node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)

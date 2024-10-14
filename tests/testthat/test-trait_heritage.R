@@ -16,8 +16,8 @@ test_that("#5 Full pipeline simple test", {
         generation = c(0.2, 0.2, 0.4, 0.4, 0.6, 0.6, 0.8, 0.8, 1, 1),
         state = c("a", "b", "a", "b", "a", "b", "a", "b", "a", "b"),
         numerator_sum = c(0, 0, 1, 0, 1, 0, 3, 0, 3, 0),
-        denominator_sum = c(0, 0, 1, 1, 1, 1, 3, 3, 3, 3),
-        clade_probability = c(0, 0, 1, 0, 1, 0, 1, 0, 1, 0)
+        denominator_sum = c(0, 0, 1, 1, 1, 1, 3, 3, 6, 6),
+        clade_probability = c(0, 0, 1, 0, 1, 0, 1, 0, 0.5, 0)
       ),
       sorted = "generation",
       row.names = c(NA, -10L),
@@ -30,8 +30,8 @@ test_that("#5 Full pipeline simple test", {
       list(
         generation = c(0.2, 0.4, 0.6, 0.8, 1),
         numerator_sum = c(0, 1, 1, 3, 3),
-        denominator_sum = c(0, 1, 1, 3, 3),
-        clade_probability = c(NaN, 1, 1, 1, 1)
+        denominator_sum = c(0, 1, 1, 3, 6),
+        clade_probability = c(NaN, 1, 1, 1, 0.5)
       ),
       row.names = c(NA, -5L),
       class = c("data.table", "data.frame"),
