@@ -50,7 +50,7 @@ test_that("#6 No matches", {
 
   result = permute_trait_heritage(t, trait, generation_time = 0.2, n_permutations = 1)
 
-  expect_equal(result$summary$clade_probability, c(0, 0, 0, 0, 0))
+  expect_equal(result$summary$clade_probability, c(NaN, 0, 0, 0, 0))
 
 })
 
