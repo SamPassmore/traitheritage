@@ -41,7 +41,7 @@ trait_heritage = function(tree, trait, generation_time){
   # Full results table to fill in
   result = data.table(
     generation = rep(cuts, each = length(unique(trait))),
-    state = unique(trait)
+    state = as.character(unique(trait))
   )
 
   # get node ages
@@ -58,8 +58,9 @@ trait_heritage = function(tree, trait, generation_time){
   denominator = dp_df[, .(denominator_sum = .N), by = c("time")]
 
   # get start end times for nodes and desired cuts
-  # node_times = numerator[, .(start = c(0, time), end = c(time, time[.N] + generation_time))]
-  node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
+  # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
+  nh_dt_u = unique(nh_dt[,-c("node")])[order(time)]
+  node_times = nh_dt_u[, .(start = c(0, time[-.N]), end = time)]
   setkey(node_times, start, end)
   cuts_dt = data.table(start = cuts, end = cuts)
   setkey(cuts_dt, start, end)

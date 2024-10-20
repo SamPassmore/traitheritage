@@ -74,7 +74,7 @@ test_that("#6 No matches", {
 
   out_probability = result$summary
 
-  expect_equal(out_probability$clade_probability, c(NaN, NaN, NaN, NaN, NaN))
+  expect_equal(out_probability$clade_probability, c(NaN, 0, 0, 0, 0))
 
 })
 
@@ -101,7 +101,7 @@ test_that("#1. Complex test", {
     generation_time = generation_time
   )
 
-  expect_equal(round(result$summary$clade_probability[result$summary$generation == 62975], 8),  0.02547413)
+  expect_equal(round(result$summary$clade_probability[result$summary$generation == 62975], 8),  0.2292672)
   expect_equal(result$by_trait$numerator_sum[result$by_trait$generation == 62975], c(0, 78, 28, 190, 15, 741, 1, 990, 0))
   expect_equal(result$by_trait$denominator_sum[result$by_trait$generation == 62975], rep(8911, 9))
 })

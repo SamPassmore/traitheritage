@@ -16,16 +16,15 @@ permute_trait_heritage = function(tree, trait, generation_time, n_permutations =
     names(p_trait) = names(p_trait)[sample(1:length(p_trait))]
     trait_heritage(tree, p_trait, generation_time)
   })
-  names(permuted_list) = paste0("p_", 1:n_permutations)
 
   by_trait = lapply(permuted_list, "[[", 1)
   p_summary = lapply(permuted_list, "[[", 2)
 
+  names(by_trait) = paste0("p_", 1:n_permutations)
+  names(p_summary) = paste0("p_", 1:n_permutations)
+
   permuted_bytrait = data.table::rbindlist(by_trait, idcol = "iteration")
   permuted_summary = data.table::rbindlist(p_summary, idcol = "iteration")
-
-  permuted_bytrait$iteration = lapply(strsplit(row.names(permuted_bytrait), "\\."), '[[', 1)
-  permuted_summary$iteration = lapply(strsplit(row.names(permuted_summary), "\\."), '[[', 1)
 
   return(list(by_trait = permuted_bytrait, summary = permuted_summary))
 }
