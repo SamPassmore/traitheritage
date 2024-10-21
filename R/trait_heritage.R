@@ -53,9 +53,15 @@ trait_heritage = function(tree, trait, generation_time){
   nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = max(nh) - ape::node.depth.edgelength(tree))
   dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 
+  # Remove duplicated pairs in the phylogenetic hierarchy
+  dp_df = dp_df[!duplicated(dp_df, by = c("V1", "V2"), fromLast = TRUE)]
+
   # Calculate shared traits by node times and order by time
-  numerator = dp_df[trait == TRUE, .(numerator_sum = .N), by = c("time", "trait_named")][order(time, decreasing = FALSE)]
-  denominator = dp_df[, .(denominator_sum = .N), by = c("time")]
+  numerator = dp_df[trait == TRUE, .(numerator_node = .N), by = c("time", "trait_named")][order(time, decreasing = FALSE)]
+  numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
+
+  denominator = dp_df[, .(denominator_node = .N), by = c("time")][order(time, decreasing = FALSE)]
+  denominator[,denominator_sum := cumsum(denominator_node)]
 
   # get start end times for nodes and desired cuts
   # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
@@ -72,6 +78,11 @@ trait_heritage = function(tree, trait, generation_time){
 
   # Create probability table
   node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+  # special case for the root
+  trait_table = choose(table(trait), 2)
+  root_numerator = data.table(i.start = max(node_probs$i.start, na.rm = TRUE), trait_named = names(trait_table), numerator_sum = c(trait_table))
+  node_probs = merge.data.table(node_probs, root_numerator, by = c("i.start", "trait_named", "numerator_sum"), all = TRUE)
+
   node_denom = merge.data.table(cuts_nodes, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
 
   probs = merge.data.table(result, node_probs, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
