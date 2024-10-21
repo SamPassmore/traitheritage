@@ -1,98 +1,3 @@
-#' Internal function: Calculate probabilities of matching states within a clade
-#'
-#' @param clade_states A named vector of trait values
-#' @param state the state to condition on
-#'
-#' @return numerator: the number of matching pairs within a clade
-#' @return denominator: The number of taxa pairs within a clade
-#' @export
-#'
-.clade_probabilities <- function(state) {
-
-  N <- choose(table(state), 2)
-  D <- choose(length(state), 2)
-
-  return(data.table(state = names(N), numerator = c(N), denominator = D))
-}
-
-#' Internal function: Cuts a phylogeny at a given point
-#'
-#' @param tree is a dated phylogenetic tree with branch lengths stored as a phylo object (as in the ape package).
-#' @param cut the slice time
-#' @param k number of slices
-#'
-#' @description
-#' This function has been adapted from phyloregion, but included separately here to avoid unnecessary dependencies from that package
-#' Please cite Daru, B. H., Karunarathne P., & Schliep K. (2020), phyloregion: R package for biogeographic regionalization and macroecology. Methods in Ecology and Evolution, 11: 1483-1491. doi:10.1111/2041-210X.13478
-#' if using this function.
-#'
-#' @return a data frame showing the clades for each taxa
-#'
-.get_clades = function(tree, cut = NULL, k = NULL, desc){
-  nh <- ape::node.depth.edgelength(tree)
-  nh <- max(nh) - nh
-  # if (!is.null(k)) {
-  #   if (k >= Ntip(tree))
-  #     return(as.list(tree$tip.label))
-  #   if (k == 1)
-  #     return(list(tree$tip.label))
-  #   kids <- lengths(phangorn::Descendants(tree, type = "children"))
-  #   kids[kids > 0] <- kids[kids > 0] - 1L
-  #   tmp <- 1
-  #   eps <- 1e-08
-  #   ordered_nh <- order(nh, decreasing = TRUE)
-  #   i <- 1
-  #   while (tmp < k) {
-  #     j <- ordered_nh[i]
-  #     cut <- nh[j] - eps
-  #     tmp <- tmp + kids[j]
-  #     i <- i + 1
-  #   }
-  # }
-  ind <- which((nh[tree$edge[, 1]] > cut) &
-                 (nh[tree$edge[, 2]] <= cut))
-
-  res <- desc[tree$edge[ind, 2]]
-  lapply(res, function(res, tips) tips[res], tree$tip.label)
-}
-
-#' Internal Function: Identify clades at all generations
-#'
-#' @param tree a phylogenetic tree
-#' @param generation_time A number showing the number of generations to calculate for the tree. User should calculate this based on their branch lengths
-#'
-#' @return clades: a data.frame showing the clades for each taxa within each generation.
-#' @export
-.slice_tree = function(tree, generation_time){
-  max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
-  cuts = seq(from = 0, to = max_tree_depth, by = generation_time)
-
-  # don't calculate any cuts for values the same as the depth of the tree
-  cuts = cuts[cuts != max_tree_depth]
-  desc = phangorn::Descendants(tree)
-  # Identify taxa within each clade for each generation
-  clades = lapply(cuts,
-                  function(cc) {
-                    ## get.clades assumes that taxa start at zero, and cuts go backwards from there.
-                    .clades = .get_clades(tree, cut = cc, desc = desc)
-                    names(.clades) = seq_along(.clades)
-                    ## Stack clades
-                    clade_df = stack(.clades)
-                    colnames(clade_df) = c("taxa", "clade")
-
-                    clade_df
-                  })
-  names(clades) = paste0("g_", cuts)
-
-  clades_df = data.table::rbindlist(clades, idcol = "generation")
-  clades_df$clade = as.numeric(clades_df$clade) # it is useful later for this to be numeric, but this is just a choice.
-
-  # Return
- return(data.table::setDT(clades_df))
-}
-
-
-## Main function
 #' Calculate the heritage of a trait along a single phylogeny
 #'
 #' @param tree a single phylogeny
@@ -103,24 +8,91 @@
 #' @export
 #'
 trait_heritage = function(tree, trait, generation_time){
-  ## Add argument tests to the function
+
   if(any(is.na(trait))) stop("No NA trait values are allowed. ")
-
   if(is.null(names(trait))) stop("trait must have names that match the taxa. Ensure trait is a named vector.")
-
-  # Trait names must match taxa labels
   if(!all(names(trait) %in% tree$tip.label)) stop("Some tips have no matching trait. Make sure all tips have a trait.")
 
-  # 1. Calculate tree cuts
-  clades = .slice_tree(tree, generation_time)
+  # clades sets at each node
+  descendants = phangorn::Descendants(tree)
+  names(descendants) = seq_along(descendants)
+  # clades with more than one taxa
+  desc_multi = descendants[sapply(descendants, length) > 1]
+  desc_pairs = lapply(desc_multi, function(x) data.table(t(combn(x, 2))))
+  dp_df = data.table::rbindlist(desc_pairs, idcol= "node")
 
-  # Add trait to splits
-  trait_df = stack(trait)
-  clades = clades[trait_df, on = c("taxa" = "ind")]
+  # make a reference table for taxa id to speed up taxa matching
+  ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
+  trait_dt = data.table(taxa = names(trait), trait = trait)
+  ref = ref[trait_dt, on = "taxa"]
 
-  output = clades[, .clade_probabilities(values), by = c("generation", "clade")]
+  # merge in trait data
+  dp_df = merge.data.table(dp_df, ref, by.x = "V1", by.y = "ind", all.x = TRUE)
+  dp_df = merge.data.table(dp_df, ref, by.x = "V2", by.y = "ind", all.x = TRUE)
 
-  # Return
-  output
+  # identify shared traits
+  dp_df[, trait := trait.x == trait.y]
+  dp_df[, trait_named := ifelse(trait.x == trait.y, trait.x, "DIFFERENT")]
+
+  # Identify which clades are under a certain time point
+  max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
+  cuts = seq(generation_time, max_tree_depth, by = generation_time)
+
+  # Full results table to fill in
+  result = data.table(
+    generation = rep(cuts, each = length(unique(trait))),
+    state = as.character(unique(trait))
+  )
+
+  # get node ages
+  nh <- ape::node.depth.edgelength(tree)
+  # make the root 0
+  nh <- max(nh) - nh
+
+  # add times to dp_df
+  nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = max(nh) - ape::node.depth.edgelength(tree))
+  dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
+
+  # Calculate shared traits by node times and order by time
+  numerator = dp_df[trait == TRUE, .(numerator_sum = .N), by = c("time", "trait_named")][order(time, decreasing = FALSE)]
+  denominator = dp_df[, .(denominator_sum = .N), by = c("time")]
+
+  # get start end times for nodes and desired cuts
+  # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
+  nh_dt_u = unique(nh_dt[,-c("node")])[order(time)]
+  node_times = nh_dt_u[, .(start = c(0, time[-.N]), end = time)]
+  setkey(node_times, start, end)
+  cuts_dt = data.table(start = cuts, end = cuts)
+  setkey(cuts_dt, start, end)
+
+  cuts_nodes = data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
+
+  # special case for root node
+  cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
+
+  # Create probability table
+  node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+  node_denom = merge.data.table(cuts_nodes, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+
+  probs = merge.data.table(result, node_probs, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
+                   all.x = TRUE)
+  probs = merge.data.table(probs, node_denom, by.x = "generation", by.y = "i.start", all.x = TRUE, allow.cartesian = TRUE)
+  probs[, clade_probability := numerator_sum / denominator_sum,]
+
+  # Change all NA values to 0.
+  # I assume the only time this arises is in singleton clades
+  probs[is.na(probs)] = 0
+
+  ## make summary
+  summary = probs[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
+                  by = "generation"][,clade_probability := numerator_sum / denominator_sum]
+
+  return(list(
+    ## Results by each level of the trait
+    by_trait = probs[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")],
+    ## Summary of results by generation
+    summary = summary)
+  )
 }
+
 

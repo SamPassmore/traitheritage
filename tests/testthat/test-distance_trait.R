@@ -158,12 +158,12 @@ test_that("Same Denominator", {
   )
 
   t_result = trait_heritage(t, trait, generation_time)
-  denominator = t_result[, .(unique_denominator = unique(denominator)),
-                                     by = list(generation, clade)]
+  denominator = t_result$summary[, .(unique_denominator = unique(denominator_sum)),
+                                     by = list(generation)]
   denominator = denominator[, .(denominator_sum = sum(unique_denominator)),
                             by = list(generation)]
 
-  expect_equal(d_result$denominator_sum, denominator$denominator_sum)
+  expect_equal(d_result$denominator_sum, c(0, denominator$denominator_sum))
 })
 
 
