@@ -57,11 +57,22 @@ trait_heritage = function(tree, trait, generation_time){
   dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 
   # Calculate shared traits by node times and order by time
-  numerator = dp_df[trait == TRUE, .(numerator_node = .N), by = c("time", "trait_named")][order(time, decreasing = FALSE)]
+  numerator = dp_df[trait == TRUE, .(numerator_node = .N, time = first(time)), by = c("node", "trait_named")][order(time, decreasing = FALSE)]
   numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
 
-  denominator = dp_df[, .(denominator_node = .N), by = c("time")][order(time, decreasing = FALSE)]
+  denominator = dp_df[, .(denominator_node = .N, time = first(time)), by = "node"][order(time, decreasing = FALSE)]
   denominator[,denominator_sum := cumsum(denominator_node)]
+
+  # Full node table
+  node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
+                           trait_named = as.character(unique(trait)),
+                           stringsAsFactors = FALSE)
+  setDT(node_table, key = c("node", "trait_named"))
+
+  node_table = merge.data.table(node_table, denominator[,.(node, denominator_sum, time)], by = c("node"), all.x = TRUE, allow.cartesian = TRUE)
+  node_table = merge.data.table(node_table, numerator[,.(node, trait_named, numerator_sum)], by = c("node", "trait_named"), all.x = TRUE)
+  node_table = node_table[order(time),]
+  node_table[, numerator_sum := nafill(numerator_sum, "locf"), by = c("trait_named")]
 
   # get start end times for nodes and desired cuts
   # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
@@ -71,8 +82,9 @@ trait_heritage = function(tree, trait, generation_time){
   # cuts_dt = data.table(start = cuts, end = cuts)
   # setkey(cuts_dt, start, end)
 
-  node_times = dp_df[order(time),.(end = unique(time))]
-  node_times[,start := c(0, end[-.N])]
+  node_times = dp_df[order(time),.(end = unique(time), node = unique(node))]
+  node_times[,start := c(0, end[-.N]) + 1e-9] # add a small amount to start so that intervals are separated
+  node_times = node_times[-1,]
   setkey(node_times, start, end)
   cuts_dt = data.table(start = cuts, end = cuts)
   setkey(cuts_dt, start, end)
@@ -83,10 +95,12 @@ trait_heritage = function(tree, trait, generation_time){
   cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
 
   # Create probability table
-  node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
-  node_probs = merge.data.table(node_probs, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+  # node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+  # node_probs = merge.data.table(node_probs, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
 
-  probs = merge.data.table(result, node_probs, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
+  cut_fraction = merge.data.table(cuts_nodes, node_table, by = "node", all = TRUE, allow.cartesian = TRUE)
+
+  probs = merge.data.table(result, cut_fraction, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
                    all.x = TRUE)
 
   probs[, clade_probability := numerator_sum / denominator_sum,]
@@ -97,16 +111,6 @@ trait_heritage = function(tree, trait, generation_time){
 
   # subset to columns of interest
   probs = probs[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
-
-  # special case for the root
-  trait_table = choose(table(trait), 2)
-  root_results = data.table(
-    generation = max_tree_depth,
-    state = names(trait_table),
-    numerator_sum = c(trait_table),
-    denominator_sum = choose(length(trait), 2)
-    )[,clade_probability := numerator_sum / denominator_sum]
-  probs = rbind(probs, root_results)
 
   ## make summary
   summary = probs[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
