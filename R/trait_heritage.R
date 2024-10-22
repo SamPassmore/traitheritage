@@ -21,6 +21,9 @@ trait_heritage = function(tree, trait, generation_time){
   desc_pairs = lapply(desc_multi, function(x) data.table(t(combn(x, 2))))
   dp_df = data.table::rbindlist(desc_pairs, idcol= "node")
 
+  # Remove duplicated pairs in the phylogenetic hierarchy
+  dp_df = dp_df[!duplicated(dp_df, by = c("V1", "V2"), fromLast = TRUE)]
+
   # make a reference table for taxa id to speed up taxa matching
   ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
   trait_dt = data.table(taxa = names(trait), trait = trait)
@@ -53,9 +56,6 @@ trait_heritage = function(tree, trait, generation_time){
   nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = max(nh) - ape::node.depth.edgelength(tree))
   dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 
-  # Remove duplicated pairs in the phylogenetic hierarchy
-  dp_df = dp_df[!duplicated(dp_df, by = c("V1", "V2"), fromLast = TRUE)]
-
   # Calculate shared traits by node times and order by time
   numerator = dp_df[trait == TRUE, .(numerator_node = .N), by = c("time", "trait_named")][order(time, decreasing = FALSE)]
   numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
@@ -65,8 +65,14 @@ trait_heritage = function(tree, trait, generation_time){
 
   # get start end times for nodes and desired cuts
   # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
-  nh_dt_u = unique(nh_dt[,-c("node")])[order(time)]
-  node_times = nh_dt_u[, .(start = c(0, time[-.N]), end = time)]
+  # nh_dt_u = unique(nh_dt[,-c("node")])[order(time)]
+  # node_times = nh_dt_u[, .(start = c(0, time[-.N]), end = time)]
+  # setkey(node_times, start, end)
+  # cuts_dt = data.table(start = cuts, end = cuts)
+  # setkey(cuts_dt, start, end)
+
+  node_times = dp_df[order(time),.(end = unique(time))]
+  node_times[,start := c(0, end[-.N])]
   setkey(node_times, start, end)
   cuts_dt = data.table(start = cuts, end = cuts)
   setkey(cuts_dt, start, end)
@@ -78,21 +84,29 @@ trait_heritage = function(tree, trait, generation_time){
 
   # Create probability table
   node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
-  # special case for the root
-  trait_table = choose(table(trait), 2)
-  root_numerator = data.table(i.start = max(node_probs$i.start, na.rm = TRUE), trait_named = names(trait_table), numerator_sum = c(trait_table))
-  node_probs = merge.data.table(node_probs, root_numerator, by = c("i.start", "trait_named", "numerator_sum"), all = TRUE)
-
-  node_denom = merge.data.table(cuts_nodes, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+  node_probs = merge.data.table(node_probs, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
 
   probs = merge.data.table(result, node_probs, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
                    all.x = TRUE)
-  probs = merge.data.table(probs, node_denom, by.x = "generation", by.y = "i.start", all.x = TRUE, allow.cartesian = TRUE)
+
   probs[, clade_probability := numerator_sum / denominator_sum,]
 
   # Change all NA values to 0.
   # I assume the only time this arises is in singleton clades
   probs[is.na(probs)] = 0
+
+  # subset to columns of interest
+  probs = probs[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
+
+  # special case for the root
+  trait_table = choose(table(trait), 2)
+  root_results = data.table(
+    generation = max_tree_depth,
+    state = names(trait_table),
+    numerator_sum = c(trait_table),
+    denominator_sum = choose(length(trait), 2)
+    )[,clade_probability := numerator_sum / denominator_sum]
+  probs = rbind(probs, root_results)
 
   ## make summary
   summary = probs[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
@@ -100,7 +114,7 @@ trait_heritage = function(tree, trait, generation_time){
 
   return(list(
     ## Results by each level of the trait
-    by_trait = probs[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")],
+    by_trait = probs,
     ## Summary of results by generation
     summary = summary)
   )
