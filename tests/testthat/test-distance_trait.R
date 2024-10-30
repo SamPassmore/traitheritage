@@ -2,7 +2,7 @@
 
 test_that("#1. Simple distance test", {
 
-  t = ape::read.tree(text = "((A,B),(C,D));")
+  t = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
   t = ape::compute.brlen(t)
 
   distances = matrix(

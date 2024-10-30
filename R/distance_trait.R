@@ -10,68 +10,130 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   names(descendants) = seq_along(descendants)
   # clades with more than one taxa
   desc_multi = descendants[sapply(descendants, length) > 1]
-
   desc_pairs = lapply(desc_multi, function(x) data.table(t(combn(x, 2))))
   dp_df = data.table::rbindlist(desc_pairs, idcol= "node")
-  dp_df[,idx := do.call(paste, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
 
-  # Create alias names for taxa
+  # Remove duplicated pairs in the phylogenetic hierarchy
+  dp_df = dp_df[!duplicated(dp_df, by = c("V1", "V2"), fromLast = TRUE)]
+  dp_df = dp_df[, idx := paste_sort2(V1, V2), by = seq_len(nrow(dp_df))]
+
+  # make a reference table for taxa id to speed up taxa matching
   ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
+
+  # merge in trait data
+  dp_df = merge.data.table(dp_df, ref, by.x = "V1", by.y = "ind", all.x = TRUE)
+  dp_df = merge.data.table(dp_df, ref, by.x = "V2", by.y = "ind", all.x = TRUE)
 
   # long distance
   n = nrow(distance_matrix)
   s = seq_len(n) - 1L
   nms = dimnames(distance_matrix)
-  dm = data.frame(value = distance_matrix[sequence(s, seq.int(1L, length(distance_matrix), n))],
+  dm = data.table(value = distance_matrix[sequence(s, seq.int(1L, length(distance_matrix), n))],
                   row = gl(n, 1L, labels = nms[[1L]])[sequence(s, 1L)],
                   col = rep.int(gl(n, 1L, labels = nms[[2L]]), s))
-  dm = as.data.table(dm)
   dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
+  # sometimes this join procudes rows with NAs if a taxa is in ref but not dm
+  # remove those
+  dm = dm[complete.cases(value)]
 
-  dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("ind", "i.ind")]
+  # dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("ind", "i.ind")]
+  dm[, idx := paste_sort2(ind, i.ind), by = seq_len(nrow(dm))]
 
   # Calculate cut-off
   dm[, trait := value < cut_off,]
+  dm[, trait_named := ifelse(trait, 1, 0)]
+
 
   # join distance cut off to nodes table
-  dp_df[dm, on = "idx",  trait := i.trait]
+  dp_df = dp_df[dm, on = "idx"]
+  dp_df[,c("value", "row", "col", "ind", "i.ind") := NULL]
 
   # Identify which clades are under a certain time point
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
-  cuts = head(seq(0, max_tree_depth, by = generation_time), -1)
+  cuts = seq(generation_time, max_tree_depth, by = generation_time)
+
+  # Full results table to fill in
+  result = data.table(
+    generation = rep(cuts, each = 2), # there are only two states in the distance function
+    state = as.character(c(0, 1))
+  )
+
+  # get node ages
   nh <- ape::node.depth.edgelength(tree)
+  # make the root 0
   nh <- max(nh) - nh
 
   # add times to dp_df
   nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = max(nh) - ape::node.depth.edgelength(tree))
-  nh_dt = nh_dt[-(1:(tree$Nnode + 1)),] # remove tips
-  dp_df = dp_df[nh_dt, on = "node"]
+  dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 
   # Calculate shared traits by node times and order by time
-  node_dt = dp_df[, list(numerator_sum = sum(trait),
-                         denominator_sum = length(trait)), by = time][order(time)]
-  node_dt[, clade_probability := numerator_sum / denominator_sum]
+  numerator = dp_df[trait == TRUE, .(numerator_node = .N, time = first(time)), by = c("node", "trait_named")][order(time, decreasing = FALSE)]
+  numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
+  numerator[,trait_named := as.character(trait_named)]
+
+  denominator = dp_df[, .(denominator_node = .N, time = first(time)), by = "node"][order(time, decreasing = FALSE)]
+  denominator[,denominator_sum := cumsum(denominator_node)]
+
+  # Full node table
+  node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
+                           trait_named = as.character(as.numeric(unique(dp_df$trait))),
+                           stringsAsFactors = FALSE)
+  setDT(node_table, key = c("node", "trait_named"))
+
+  node_table = merge.data.table(node_table, denominator[,.(node, denominator_sum, time)], by = c("node"), all.x = TRUE, allow.cartesian = TRUE)
+  node_table = merge.data.table(node_table, numerator[,.(node, trait_named, numerator_sum)], by = c("node", "trait_named"), all.x = TRUE)
+  node_table = node_table[order(time),]
+  node_table[, numerator_sum := nafill(numerator_sum, "locf"), by = c("trait_named")]
 
   # get start end times for nodes and desired cuts
-  node_times = node_dt[, .(start = time, end = c(time[-1], max(time) + generation_time))][,repeats := floor((end - start) / generation_time)]
+  # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
+  # nh_dt_u = unique(nh_dt[,-c("node")])[order(time)]
+  # node_times = nh_dt_u[, .(start = c(0, time[-.N]), end = time)]
+  # setkey(node_times, start, end)
+  # cuts_dt = data.table(start = cuts, end = cuts)
+  # setkey(cuts_dt, start, end)
+
+  node_times = dp_df[order(time),.(end = unique(time), node = unique(node))]
+  node_times[,start := c(0, end[-.N]) + 1e-9] # add a small amount to start so that intervals are separated
+  node_times = node_times[-1,]
   setkey(node_times, start, end)
-  cuts_dt = data.table(start = cuts, end = c(cuts[-1], max(cuts) + generation_time))
+  cuts_dt = data.table(start = cuts, end = cuts)
   setkey(cuts_dt, start, end)
 
   cuts_nodes = data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
 
-  # Create probability table
-  probs = merge.data.table(cuts_nodes, node_dt, by.x = "start", by.y = "time", all = TRUE)
-  probs$generation = paste0("g_", probs$i.start)
+  # special case for root node
+  cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
 
-  # Pick columns of interest
-  probs = probs[,c("generation", "numerator_sum", "denominator_sum", "clade_probability")]
+  # Create probability table
+  # node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+  # node_probs = merge.data.table(node_probs, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
+
+  cut_fraction = merge.data.table(cuts_nodes, node_table, by = "node", all = TRUE, allow.cartesian = TRUE)
+
+  probs = merge.data.table(result, cut_fraction, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
+                           all.x = TRUE)
+
+  probs[, clade_probability := numerator_sum / denominator_sum,]
 
   # Change all NA values to 0.
   # I assume the only time this arises is in singleton clades
   probs[is.na(probs)] = 0
 
-  return(probs)
+  # subset to columns of interest
+  probs = probs[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
+
+  ## make summary
+  summary = probs[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
+                  by = "generation"][,clade_probability := numerator_sum / denominator_sum]
+
+  return(list(
+    ## Results by each level of the trait
+    by_trait = probs,
+    ## Summary of results by generation
+    summary = summary)
+  )
 }
 
 # https://stackoverflow.com/questions/39005958/r-how-to-get-row-column-subscripts-of-matched-elements-from-a-distance-matri
@@ -100,4 +162,8 @@ get.prob <- function(cl.i, T1, T2) {
 
 paste_sort = function(ind, i.ind){
   apply(cbind(ind, i.ind), 1, function(x) paste(sort(x), collapse=" "))
+}
+
+paste_sort2 = function(x, y){
+  paste(sort(c(x, y)), collapse=" ")
 }

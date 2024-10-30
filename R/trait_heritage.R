@@ -33,6 +33,7 @@ trait_heritage = function(tree, trait, generation_time){
   dp_df = merge.data.table(dp_df, ref, by.x = "V1", by.y = "ind", all.x = TRUE)
   dp_df = merge.data.table(dp_df, ref, by.x = "V2", by.y = "ind", all.x = TRUE)
 
+
   # identify shared traits
   dp_df[, trait := trait.x == trait.y]
   dp_df[, trait_named := ifelse(trait.x == trait.y, trait.x, "DIFFERENT")]
