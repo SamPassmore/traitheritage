@@ -1,11 +1,11 @@
 ## trait co-evolution
 
 test_that("Simple test", {
-  t = ape::read.tree(text = "((A,B),(C,D));")
-  tree = ape::compute.brlen(t)
+  tree = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
+  tree = ape::compute.brlen(tree)
 
   trait = c("b", "a", "a", "a")
-  names(trait) = t$tip.label
+  names(trait) = tree$tip.label
 
 
   distances = matrix(
@@ -15,7 +15,7 @@ test_that("Simple test", {
       6, 5),
     byrow = TRUE,
     ncol = 2,
-    dimnames = list(t$tip.label, c("X", "Y"))
+    dimnames = list(tree$tip.label, c("X", "Y"))
   )
   distance_matrix = as.matrix(dist(distances))
 

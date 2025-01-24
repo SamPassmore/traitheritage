@@ -83,9 +83,12 @@ trait_heritage = function(tree, trait, generation_time){
   # cuts_dt = data.table(start = cuts, end = cuts)
   # setkey(cuts_dt, start, end)
 
-  node_times = dp_df[order(time),.(end = unique(time), node = unique(node))]
-  node_times[,start := c(0, end[-.N]) + 1e-9] # add a small amount to start so that intervals are separated
+  # node_times = dp_df[order(time),.(end = unique(time), node = unique(node))]
+  node_times = unique( dp_df[order(time),list(time, node),] )
+  setnames(node_times, c("time", "node"), c("end","node"))
+  node_times[,start := c(0, end[-.N])] # add a small amount to start so that intervals are separated
   node_times = node_times[-1,]
+  # node_times = round(node_times, 2) # avoids problems with rounding error and comparisons
   setkey(node_times, start, end)
   cuts_dt = data.table(start = cuts, end = cuts)
   setkey(cuts_dt, start, end)

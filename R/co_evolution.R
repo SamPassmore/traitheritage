@@ -101,3 +101,25 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
 
   return(list(time_df = pp, pairs_df = dp_df))
 }
+
+
+trait_coevolution_permutation =  function(tree, trait, distance_matrix, generation_time, cut_off){
+  set.seed(seed)
+  # Permuted results
+  permuted_list = lapply(1:n_permutations, function(i){
+    p_trait = trait
+    names(p_trait) = names(p_trait)[sample(1:length(p_trait))]
+    trait_coevolution(tree, p_trait, distance_matrix, generation_time, cut_off)
+  })
+
+  by_trait = lapply(permuted_list, "[[", 1)
+  p_summary = lapply(permuted_list, "[[", 2)
+
+  names(by_trait) = paste0("p_", 1:n_permutations)
+  names(p_summary) = paste0("p_", 1:n_permutations)
+
+  permuted_bytrait = data.table::rbindlist(by_trait, idcol = "iteration")
+  permuted_summary = data.table::rbindlist(p_summary, idcol = "iteration")
+
+  return(list(by_trait = permuted_bytrait, summary = permuted_summary))
+  }
