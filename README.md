@@ -1,5 +1,9 @@
 # Trait Heritage: An R Package for calculating the heritage of traits on a phylogeny
 
+<!-- badges: start -->
+  [![Codecov test coverage](https://codecov.io/gh/SamPassmore/traitheritage/branch/main/graph/badge.svg)](https://app.codecov.io/gh/SamPassmore/traitheritage?branch=main)
+  <!-- badges: end -->
+
 ## Installation
 
 You can install traitheritage directly from GitHub using `devtools`
