@@ -4,6 +4,8 @@
   [![Codecov test coverage](https://codecov.io/gh/SamPassmore/traitheritage/branch/main/graph/badge.svg)](https://app.codecov.io/gh/SamPassmore/traitheritage?branch=main)
   <!-- badges: end -->
 
+This package is still under development. 
+
 ## Installation
 
 You can install traitheritage directly from GitHub using `devtools`
