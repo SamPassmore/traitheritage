@@ -1,4 +1,3 @@
-
 test_that("#5 Full pipeline simple test", {
   tree = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
   tree = ape::compute.brlen(tree)

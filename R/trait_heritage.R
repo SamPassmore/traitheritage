@@ -7,9 +7,9 @@
 #' @return a dataframe containing the probability of shared languages within each generation
 #' @export
 #'
-trait_heritage = function(tree, trait, generation_time){
+trait_heritage = function(tree, trait, generation_time, value){
 
-  if(any(is.na(trait))) stop("No NA trait values are allowed. ")
+  if(any(is.na(trait))) stop("No NA trait values are allowed.")
   if(is.null(names(trait))) stop("trait must have names that match the taxa. Ensure trait is a named vector.")
   if(!all(names(trait) %in% tree$tip.label)) stop("Some tips have no matching trait. Make sure all tips have a trait.")
 
@@ -33,13 +33,18 @@ trait_heritage = function(tree, trait, generation_time){
   dp_df = merge.data.table(dp_df, ref, by.x = "V1", by.y = "ind", all.x = TRUE)
   dp_df = merge.data.table(dp_df, ref, by.x = "V2", by.y = "ind", all.x = TRUE)
 
-
   # identify shared traits
   dp_df[, trait := trait.x == trait.y]
   dp_df[, trait_named := ifelse(trait.x == trait.y, trait.x, "DIFFERENT")]
 
+  # Comparison of a specific value
+  if(!missing(value)){
+    dp_df[, trait := trait.x == trait.y & trait.x == value]
+  }
+
   # Identify which clades are under a certain time point
-  max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
+  # allows for non-ultrametric trees
+  max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)])
   cuts = seq(generation_time, max_tree_depth, by = generation_time)
 
   # Full results table to fill in
@@ -83,17 +88,17 @@ trait_heritage = function(tree, trait, generation_time){
   # cuts_dt = data.table(start = cuts, end = cuts)
   # setkey(cuts_dt, start, end)
 
-  # node_times = dp_df[order(time),.(end = unique(time), node = unique(node))]
   node_times = unique( dp_df[order(time),list(time, node),] )
   setnames(node_times, c("time", "node"), c("end","node"))
-  node_times[,start := c(0, end[-.N])] # add a small amount to start so that intervals are separated
+  node_times[,start := c(0, end[-.N])]
   node_times = node_times[-1,]
-  # node_times = round(node_times, 2) # avoids problems with rounding error and comparisons
+
   setkey(node_times, start, end)
   cuts_dt = data.table(start = cuts, end = cuts)
   setkey(cuts_dt, start, end)
 
   cuts_nodes = data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
+  data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
 
   # special case for root node
   cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
