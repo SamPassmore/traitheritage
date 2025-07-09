@@ -7,7 +7,7 @@
 #' @return a dataframe containing the probability of shared languages within each generation
 #' @export
 #'
-trait_heritage = function(tree, trait, generation_time, value){
+trait_heritage = function(tree, trait, generation_time){
 
   if(any(is.na(trait))) stop("No NA trait values are allowed.")
   if(is.null(names(trait))) stop("trait must have names that match the taxa. Ensure trait is a named vector.")
@@ -55,7 +55,7 @@ trait_heritage = function(tree, trait, generation_time, value){
   nh <- max(nh) - nh
 
   # add times to dp_df
-  nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = max(nh) - ape::node.depth.edgelength(tree))
+  nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = nh)
   dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 
   # Calculate shared traits by node times and order by time
@@ -71,13 +71,14 @@ trait_heritage = function(tree, trait, generation_time, value){
                            stringsAsFactors = FALSE)
   setDT(node_table, key = c("node", "trait_named"))
 
+  # merge in numerator and denominator
   node_table = merge.data.table(node_table, denominator[,.(node, denominator_sum, time)], by = c("node"), all.x = TRUE, allow.cartesian = TRUE)
   node_table = merge.data.table(node_table, numerator[,.(node, trait_named, numerator_sum)], by = c("node", "trait_named"), all.x = TRUE)
   node_table = node_table[order(time),]
   node_table[, numerator_sum := nafill(numerator_sum, "locf"), by = c("trait_named")]
+  # Identify cuts and convert to numeric
   node_table[, time.bin := cut(time, cuts, labels = cuts[-1])]
   node_table[, time.bin := as.numeric(levels(time.bin))[time.bin]]
-
   setkey(node_table, time)
 
   # merge the node table to the result table
@@ -88,63 +89,22 @@ trait_heritage = function(tree, trait, generation_time, value){
                           denominator_sum = nafill(denominator_sum, "locf")),
                   by = c("state")]
 
-  # get start end times for nodes and desired cuts
-  # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
-  # nh_dt_u = unique(nh_dt[,-c("node")])[order(time)]
-  # node_times = nh_dt_u[, .(start = c(0, time[-.N]), end = time)]
-  # setkey(node_times, start, end)
-  # cuts_dt = data.table(start = cuts, end = cuts)
-  # setkey(cuts_dt, start, end)
-
-  # node_times = unique( dp_df[order(time),list(time, node),] )
-  # setnames(node_times, c("time", "node"), c("end","node"))
-  # node_times[,start := c(0, end[-.N])]
-  # node_times[,start := end]
-  #node_times = node_times[-1,]
-
-  # setkey(node_times, start, end)
-  # cuts_dt = data.table(start = cuts, end = cuts)
-  # #cuts_dt = data.table(start = c(0, cuts[-length(cuts)]), end = cuts)
-  # setkey(cuts_dt, start, end)
-
-  # cuts_nodes = data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
-  # cuts_nodes = data.table::foverlaps(y = cuts_dt, x = node_times, type = "within")
-
-  # cuts_dt[.(node_table), on = .(start <= time, end > time),
-  #         `:=` (ns = numerator_sum, ds = denominator_sum, tn = trait_named)]
-  #
-  # node_table[.(cuts_dt), on = .(time >= start, time < start),
-  #         `:=` (ns = numerator_sum, ds = denominator_sum, tn = trait_named, end = end)]
-
-  # special case for root node
-  # cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
-
-  # Create probability table
-  # node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
-  # node_probs = merge.data.table(node_probs, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
-
-  # cut_fraction = merge.data.table(cuts_nodes, node_table, by = "node", all = TRUE, allow.cartesian = TRUE)
-
-  # probs = merge.data.table(result, cut_fraction, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
-  #                  all.x = TRUE)
-
-  probs = result
-  probs[, clade_probability := numerator_sum / denominator_sum,]
+  result[, clade_probability := numerator_sum / denominator_sum,]
 
   # Change all NA values to 0.
   # I assume the only time this arises is in singleton clades
-  probs[is.na(probs)] = 0
+  result[is.na(result)] = 0
 
   # subset to columns of interest
-  probs = probs[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
+  result = result[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
 
   ## make summary
-  summary = probs[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
+  summary = result[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
                   by = "generation"][,clade_probability := numerator_sum / denominator_sum]
 
   return(list(
     ## Results by each level of the trait
-    by_trait = probs,
+    by_trait = result,
     ## Summary of results by generation
     summary = summary)
   )
