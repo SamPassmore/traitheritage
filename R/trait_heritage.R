@@ -37,11 +37,6 @@ trait_heritage = function(tree, trait, generation_time, value){
   dp_df[, trait := trait.x == trait.y]
   dp_df[, trait_named := ifelse(trait.x == trait.y, trait.x, "DIFFERENT")]
 
-  # Comparison of a specific value
-  if(!missing(value)){
-    dp_df[, trait := trait.x == trait.y & trait.x == value]
-  }
-
   # Identify which clades are under a certain time point
   # allows for non-ultrametric trees
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)])
