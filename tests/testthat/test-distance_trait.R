@@ -26,14 +26,14 @@ test_that("#1. Simple distance test", {
     cut_off = cut_off
   )
 
-  expect_equal(result$clade_probability[2], 1)
-  expect_equal(result$numerator_sum[2], 2)
-  expect_equal(result$denominator_sum[2], 2)
+  expect_equal(result$summary$clade_probability[1], 1)
+  expect_equal(result$summary$numerator_sum[2], 2)
+  expect_equal(result$summary$denominator_sum[2], 6)
 })
 
 test_that("#2. Simple distance test", {
 
-  t = ape::read.tree(text = "((A),(B,C,D));")
+  t = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
   t = ape::compute.brlen(t)
 
   distances = matrix(
@@ -57,9 +57,9 @@ test_that("#2. Simple distance test", {
     cut_off = cut_off
   )
 
-  expect_equal(result$clade_probability, c(0, 0, 0, 0.333333333333333))
-  expect_equal(result$numerator_sum, c(0, 0, 0, 1))
-  expect_equal(result$denominator_sum, c(0, 0, 0, 3))
+  expect_equal(result$summary$clade_probability, c(NaN, 1.000, 1/3, 1/3))
+  expect_equal(result$summary$numerator_sum, c(0, 1, 1, 2))
+  expect_equal(result$summary$denominator_sum, c(0, 1, 3, 6))
 })
 
 test_that("Same Results Test", {
@@ -134,7 +134,6 @@ test_that("Same Denominator", {
 
   trait = c("b", "a", "a", "a")
   names(trait) = t$tip.label
-
 
   distances = matrix(
     c(1, 2,

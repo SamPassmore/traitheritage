@@ -81,40 +81,41 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
                            stringsAsFactors = FALSE)
   setDT(node_table, key = c("node", "trait_named"))
 
+  # merge in numerator and denominator
   node_table = merge.data.table(node_table, denominator[,.(node, denominator_sum, time)], by = c("node"), all.x = TRUE, allow.cartesian = TRUE)
   node_table = merge.data.table(node_table, numerator[,.(node, trait_named, numerator_sum)], by = c("node", "trait_named"), all.x = TRUE)
   node_table = node_table[order(time),]
   node_table[, numerator_sum := nafill(numerator_sum, "locf"), by = c("trait_named")]
+  # Identify cuts and convert to numeric
+  node_table[, time.bin := cut(time, c(0, cuts), labels = c(0, cuts)[-1])]
+  node_table[, time.bin := as.numeric(levels(time.bin))[time.bin]]
+  setkey(node_table, time)
 
-  # get start end times for nodes and desired cuts
-  # node_times = numerator[, .(start = c(0, time[-.N]), end = time)]
-  # nh_dt_u = unique(nh_dt[,-c("node")])[order(time)]
-  # node_times = nh_dt_u[, .(start = c(0, time[-.N]), end = time)]
-  # setkey(node_times, start, end)
-  # cuts_dt = data.table(start = cuts, end = cuts)
-  # setkey(cuts_dt, start, end)
+  # merge the node table to the result table
+  result = merge(result, node_table, by.x = c("generation", "state"), by.y = c("time.bin", "trait_named"), all = TRUE)
+  # Fill in the missing data, with the previous data (no node changes)
+  result = result[, numerator_sum := nafill(numerator_sum, "locf"), by = c("generation", "state")]
+  result = result[, `:=` (numerator_sum = nafill(numerator_sum, "locf"),
+                          denominator_sum = nafill(denominator_sum, "locf")),
+                  by = c("state")]
+  ## fill in empty sets with zero
+  result[][is.na(time), time := 0]
 
-  node_times = dp_df[order(time),.(end = unique(time), node = unique(node))]
-  node_times[,start := c(0, end[-.N]) + 1e-9] # add a small amount to start so that intervals are separated
-  node_times = node_times[-1,]
-  setkey(node_times, start, end)
-  cuts_dt = data.table(start = cuts, end = cuts)
-  setkey(cuts_dt, start, end)
+  # ensure matches to the oldest cut when there are multiple nodes between cuts.
 
-  cuts_nodes = data.table::foverlaps(y = node_times, x = cuts_dt, type = "within")
-
-  # special case for root node
-  cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
+  result = result[, .SD[which.max(time)], by = c("generation", "state")]
+  # specsial case for root node
+  # cuts_nodes[.N, start := cuts_nodes[.N,"end"]]
 
   # Create probability table
   # node_probs = merge.data.table(cuts_nodes, numerator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
   # node_probs = merge.data.table(node_probs, denominator, by.x = "start", by.y = "time", all = TRUE, allow.cartesian = TRUE)
 
-  cut_fraction = merge.data.table(cuts_nodes, node_table, by = "node", all = TRUE, allow.cartesian = TRUE)
+  # cut_fraction = merge.data.table(cuts_nodes, node_table, by = "node", all = TRUE, allow.cartesian = TRUE)
 
-  probs = merge.data.table(result, cut_fraction, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
-                           all.x = TRUE)
-
+  # probs = merge.data.table(result, cut_fraction, by.x = c("generation", "state"), by.y = c("i.start", "trait_named"),
+  #                          all.x = TRUE)
+  probs = result
   probs[, clade_probability := numerator_sum / denominator_sum,]
 
   # Change all NA values to 0.
