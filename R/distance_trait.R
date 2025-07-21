@@ -29,7 +29,6 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   # remove those
   dm = dm[complete.cases(value)]
 
-  # dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("ind", "i.ind")]
   dm[, idx := paste_sort2(ind, i.ind), by = seq_len(nrow(dm))]
 
   # Calculate cut-off
@@ -53,34 +52,6 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
     ## Summary of results by generation
     summary
   )
-}
-
-# https://stackoverflow.com/questions/39005958/r-how-to-get-row-column-subscripts-of-matched-elements-from-a-distance-matri
-finv <- function (k, dist_obj) {
-  if (!inherits(dist_obj, "dist"))
-    stop("please provide a 'dist' object")
-  n <- attr(dist_obj, "Size")
-  valid <- (k >= 1) & (k <= n * (n - 1) / 2)
-  k_valid <- k[valid]
-  j <- rep.int(NA_real_, length(k))
-  j[valid] <-
-    floor(((2 * n + 1) - sqrt((2 * n - 1) ^ 2 - 8 * (k_valid - 1))) / 2)
-  i <- j + k - (2 * n - j) * (j - 1) / 2
-  data.frame(i = i, j = j)
-}
-
-get.prob <- function(cl.i, T1, T2) {
-  A <- cl.i[T1]
-  B <- cl.i[T2]
-  nc <- ncol(cl.i)
-  D0 <- apply(cl.i[, 2:nc], 2, function(x) choose(table(x), 2))
-  D <- sapply(D0, sum)
-  N <- colSums(A[, -1] == B[, -1])
-  return(list(numerator = N, denominator = D))
-}
-
-paste_sort = function(ind, i.ind){
-  apply(cbind(ind, i.ind), 1, function(x) paste(sort(x), collapse=" "))
 }
 
 paste_sort2 = function(x, y){
