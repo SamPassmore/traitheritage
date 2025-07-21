@@ -70,7 +70,7 @@ distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_o
   # Calculate shared traits by node times and order by time
   numerator = dp_df[trait == TRUE, .(numerator_node = .N, time = first(time)), by = c("node", "trait_named")][order(time, decreasing = FALSE)]
   numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
-  numerator[,trait_named := as.character(trait_named)]
+  # numerator[,trait_named := as.character(trait_named)]
 
   denominator = dp_df[, .(denominator_node = .N, time = first(time)), by = "node"][order(time, decreasing = FALSE)]
   denominator[,denominator_sum := cumsum(denominator_node)]
