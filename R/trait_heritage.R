@@ -13,6 +13,7 @@ trait_heritage = function(tree, trait, generation_time){
   if(any(is.na(trait))) stop("No NA trait values are allowed.")
   if(is.null(names(trait))) stop("trait must have names that match the taxa. Ensure trait is a named vector.")
   if(!all(names(trait) %in% tree$tip.label)) stop("Some tips have no matching trait. Make sure all tips have a trait.")
+  if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
   dp_df = .get_hierarchy(tree)
 

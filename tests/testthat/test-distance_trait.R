@@ -17,7 +17,7 @@ test_that("#1. Simple distance test", {
   distance_matrix = as.matrix(dist(distances))
 
   cut_off = 2
-  generation_time = 0.5
+  generation_time = 0.2
 
   result = distance_trait_heritage(
     t,
@@ -26,9 +26,9 @@ test_that("#1. Simple distance test", {
     cut_off = cut_off
   )
 
-  expect_equal(result$summary$clade_probability[1], 1)
-  expect_equal(result$summary$numerator_sum[2], 2)
-  expect_equal(result$summary$denominator_sum[2], 6)
+  expect_equal(result$numerator_sum, c(0, 1, 1, 1, 2))
+  expect_equal(result$denominator_sum, c(0, 1, 1, 3, 6))
+
 })
 
 test_that("#2. Simple distance test", {
@@ -57,9 +57,9 @@ test_that("#2. Simple distance test", {
     cut_off = cut_off
   )
 
-  expect_equal(result$summary$clade_probability, c(NaN, 1.000, 1/3, 1/3))
-  expect_equal(result$summary$numerator_sum, c(0, 1, 1, 2))
-  expect_equal(result$summary$denominator_sum, c(0, 1, 3, 6))
+  expect_equal(result$clade_probability, c(NaN, 1.000, 1/3, 1/3))
+  expect_equal(result$numerator_sum, c(0, 1, 1, 2))
+  expect_equal(result$denominator_sum, c(0, 1, 3, 6))
 })
 
 test_that("Same Results Test", {
@@ -129,7 +129,7 @@ test_that("#2. Simple Error test", {
 
 test_that("Same Denominator", {
 
-  t = ape::read.tree(text = "((A,B),(C,D));")
+  t = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
   t = ape::compute.brlen(t)
 
   trait = c("b", "a", "a", "a")
@@ -147,7 +147,7 @@ test_that("Same Denominator", {
   distance_matrix = as.matrix(dist(distances))
 
   cut_off = 2
-  generation_time = 0.5
+  generation_time = 0.1
 
   d_result = distance_trait_heritage(
     t,
@@ -157,12 +157,8 @@ test_that("Same Denominator", {
   )
 
   t_result = trait_heritage(t, trait, generation_time)
-  denominator = t_result$summary[, .(unique_denominator = unique(denominator_sum)),
-                                     by = list(generation)]
-  denominator = denominator[, .(denominator_sum = sum(unique_denominator)),
-                            by = list(generation)]
 
-  expect_equal(d_result$denominator_sum, c(0, denominator$denominator_sum))
+  expect_equal(d_result$denominator_sum, t_result$summary$denominator_sum)
 })
 
 
@@ -195,8 +191,7 @@ test_that("#1. Complex distance test", {
     cut_off = cut_off
   )
 
-
-  expect_equal(result$clade_probability[result$generation == "g_62975"], 0.11911011)
-  expect_equal(result$numerator_sum[result$generation == "g_62975"], 953)
-  expect_equal(result$denominator_sum[result$generation == "g_62975"], 8001)
+  expect_equal(result$clade_probability[result$generation == 62975], 0.11911011)
+  expect_equal(result$numerator_sum[result$generation == 62975], 953)
+  expect_equal(result$denominator_sum[result$generation == 62975], 8001)
 })
