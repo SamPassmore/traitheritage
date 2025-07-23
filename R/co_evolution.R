@@ -16,15 +16,19 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
   if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
   if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
+  if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
-  # clades sets at each node
-  descendants = phangorn::Descendants(tree)
-  names(descendants) = seq_along(descendants)
-  # clades with more than one taxa
-  desc_multi = descendants[sapply(descendants, length) > 1]
+  # # clades sets at each node
+  # descendants = phangorn::Descendants(tree)
+  # names(descendants) = seq_along(descendants)
+  # # clades with more than one taxa
+  # desc_multi = descendants[sapply(descendants, length) > 1]
+  #
+  # desc_pairs = lapply(desc_multi, function(x) data.table(t(combn(x, 2))))
+  # dp_df = data.table::rbindlist(desc_pairs, idcol= "node")
 
-  desc_pairs = lapply(desc_multi, function(x) data.table(t(combn(x, 2))))
-  dp_df = data.table::rbindlist(desc_pairs, idcol= "node")
+  dp_df = .get_hierarchy(tree)
+
   dp_df[,idx := do.call(paste, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
 
   # Create alias names for taxa
@@ -32,6 +36,7 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
 
   trait = data.table(taxa = names(trait), trait = trait)
   ref[trait, on = "taxa", trait := trait]
+
 
   # long distance
   n = nrow(distance_matrix)
