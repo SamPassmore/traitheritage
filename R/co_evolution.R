@@ -19,15 +19,11 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
   # # clades sets at each node
-  # descendants = phangorn::Descendants(tree)
-  # names(descendants) = seq_along(descendants)
-  # # clades with more than one taxa
-  # desc_multi = descendants[sapply(descendants, length) > 1]
-  #
-  # desc_pairs = lapply(desc_multi, function(x) data.table(t(combn(x, 2))))
-  # dp_df = data.table::rbindlist(desc_pairs, idcol= "node")
-
   dp_df = .get_hierarchy(tree)
+
+  # For this function specifically, we need the object descendants (which we usually calculate in the interal function)
+  descendants = phangorn::Descendants(tree)
+  names(descendants) = seq_along(descendants)
 
   dp_df[,idx := do.call(paste, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
 
@@ -77,14 +73,22 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
 
   # Identify which clades are under a ceratin time point
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
-  cuts = head(seq(0, max_tree_depth, by = generation_time), -1)
+  # cuts = head(seq(0, max_tree_depth, by = generation_time), -1)
+  cuts = seq(0, max_tree_depth, by = generation_time)
   nh <- ape::node.depth.edgelength(tree)
   nh <- max(nh) - nh
 
   probs = lapply(cuts, function(cut){
     ind <- which((nh[tree$edge[, 1]] > cut) &
                    (nh[tree$edge[, 2]] <= cut))
+
     res = names(descendants[tree$edge[ind, 2]])
+
+    # special case for max
+    if(cut == max(nh)){
+      res = node_dt$node
+    }
+
     ndt = node_dt[node %in% res]
     oo = data.table(lang_dist = sum(ndt$lang_dist),
                     lang_nodist = sum(ndt$lang_nodist),

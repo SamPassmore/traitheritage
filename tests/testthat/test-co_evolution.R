@@ -1,15 +1,19 @@
 ## trait co-evolution
 
-test_that("Simple test", {
-  tree = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
+test_that("Simple test: only langauge matches", {
+  # tree = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
+  # tree = ape::compute.brlen(tree)
+
+  tree = ape::read.tree(text = "((tA,tE),(tB,(tC,tD)));")
   tree = ape::compute.brlen(tree)
 
-  trait = c("b", "a", "a", "a")
+  trait = c("b", "b", "a", "a", "a")
   names(trait) = tree$tip.label
 
 
   distances = matrix(
     c(1, 2,
+      1, 2,
       2, 1,
       5, 6,
       6, 5),
@@ -19,14 +23,14 @@ test_that("Simple test", {
   )
   distance_matrix = as.matrix(dist(distances))
 
-  cut_off = 2
-  generation_time = 0.5
+  cut_off = -1 # no distances are negative so this makes no distance pairs
+  generation_time = 0.2
 
   result = trait_coevolution(tree, trait, distance_matrix, generation_time, cut_off)
 
   expect_equal(
     result$time_df$denominator_sum,
-    c(0, 2))
+    c(0, 0, 1, 1, 3, 6))
   expect_equal(
     result$time_df$p_lang_dist,
     c(0, 0.5))
