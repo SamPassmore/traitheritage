@@ -1,9 +1,9 @@
 # Internal functions
 
-.get_hierarchy = function(tree){
+.get_hierarchy = function(tree, .DescendantsType = "tips"){
   ### First identify the hierachical relationship of the tree
   # clades sets at each node
-  descendants = phangorn::Descendants(tree)
+  descendants = phangorn::Descendants(tree, type = .DescendantsType)
   names(descendants) = seq_along(descendants)
 
   # Deal with clades that contain more than one taxa
