@@ -4,8 +4,9 @@ test_that("Simple test: only langauge matches", {
   # tree = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
   # tree = ape::compute.brlen(tree)
 
-  tree = ape::read.tree(text = "((tA,tE),(tB,(tC,tD)));")
-  tree = ape::compute.brlen(tree)
+  tree = ape::read.tree(text =
+                          "((tA:1.16,tB:1.16):0.44,((tC:0.20,tD:0.20):0.18,tE:0.39):1.22);")
+  tree = ape::compute.brlen(tree) # makes the tree depth = 1
 
   trait = c("b", "b", "a", "a", "a")
   names(trait) = tree$tip.label
@@ -30,13 +31,13 @@ test_that("Simple test: only langauge matches", {
 
   expect_equal(
     result$time_df$denominator_sum,
-    c(0, 0, 1, 1, 3, 6))
+    c(0, 0, 2, 4, 4, 10))
   expect_equal(
-    result$time_df$p_lang_dist,
-    c(0, 0.5))
+    result$time_df$nolang_dist,
+    c(0, 0, 0, 0, 0, 0)) # there should be no distance matches (cut_off = -1)
   expect_equal(
-    result$pairs_df$dist_trait,
-    c(T, T, F, F, F, F, T, T))
+    rowSums(result$time_df[,c("lang_dist", "lang_nodist", "nolang_dist", "nolang_nodist")]),
+    result$time_df$denominator_sum)
 })
 
 test_that("Complex test", {

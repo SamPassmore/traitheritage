@@ -19,10 +19,10 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
   # # clades sets at each node
-  dp_df = .get_hierarchy(tree)
+  dp_df = .get_hierarchy(tree, .DescendantsType = "all")
 
   # For this function specifically, we need the object descendants (which we usually calculate in the interal function)
-  descendants = phangorn::Descendants(tree)
+  descendants = phangorn::Descendants(tree, type = "all")
   names(descendants) = seq_along(descendants)
 
   dp_df[,idx := do.call(paste, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
@@ -82,7 +82,10 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
     ind <- which((nh[tree$edge[, 1]] > cut) &
                    (nh[tree$edge[, 2]] <= cut))
 
-    res = names(descendants[tree$edge[ind, 2]])
+    # res = names(descendants[tree$edge[ind, 2]])
+    # This is a hack to get all nodes and children nodes under a cut.
+    # Since we rely on a table on nodes, including taxa shouldn't cause an issue.
+    res = c(names(descendants[tree$edge[ind, 2]]), unlist(descendants[tree$edge[ind, 2]]))
 
     # special case for max
     if(cut == max(nh)){
