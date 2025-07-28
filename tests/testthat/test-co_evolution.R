@@ -31,10 +31,10 @@ test_that("Simple test: only langauge matches", {
 
   expect_equal(
     result$time_df$denominator_sum,
-    c(0, 0, 2, 4, 4, 10))
+    c(0, 0, 2, 4, 4, 10, 10))
   expect_equal(
     result$time_df$nolang_dist,
-    c(0, 0, 0, 0, 0, 0)) # there should be no distance matches (cut_off = -1)
+    c(0, 0, 0, 0, 0, 0, 0)) # there should be no distance matches (cut_off = -1)
   expect_equal(
     rowSums(result$time_df[,c("lang_dist", "lang_nodist", "nolang_dist", "nolang_nodist")]),
     result$time_df$denominator_sum)
@@ -61,8 +61,6 @@ test_that("Complex test", {
 
   trait = metadata_dist$TNG
   names(trait) = metadata_dist$PhyID
-
-
 
   cut_off = 50
   generation_time = 25

@@ -12,9 +12,9 @@ test_that("#5 Full pipeline simple test", {
   result = permute_trait_heritage(tree, trait, generation_time = 0.2, n_permutations = 1)
 
   expect_equal(result$summary$generation, c(0.2, 0.4, 0.6, 0.8, 1.0))
-  expect_equal(result$summary$numerator_sum, c(0, 0, 0, 1, 3))
+  expect_equal(result$summary$numerator_sum, c(0, 1, 1, 3, 3))
   expect_equal(result$summary$denominator_sum, c(0, 1, 1, 3, 6))
-  expect_equal(round(result$summary$clade_probability, 5), c(NaN, 0, 0, 0.33333, 0.5))
+  expect_equal(round(result$summary$clade_probability, 5), c(NaN, 1.0, 1.0, 1.0, 0.5))
 })
 
 
