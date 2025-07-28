@@ -49,7 +49,8 @@ test_that("Complex test", {
   md = read.csv(md_file)
 
   metadata_dist = md %>%
-    dplyr::filter(!is.na(latitude_hybrid) & !is.na(longitude_hybrid))
+    dplyr::filter(!is.na(latitude_hybrid) & !is.na(longitude_hybrid) &
+                    !is.na(TNG))
 
   t = ape::keep.tip(t, metadata_dist$PhyID)
 
@@ -61,6 +62,8 @@ test_that("Complex test", {
   trait = metadata_dist$TNG
   names(trait) = metadata_dist$PhyID
 
+
+
   cut_off = 50
   generation_time = 25
 
@@ -71,5 +74,14 @@ test_that("Complex test", {
     generation_time = generation_time,
     cut_off = cut_off
   )
+
+  expect_equal(
+    tail(ce$time_df$denominator_sum, 1),
+    choose(ape::Ntip(t), 2)
+  )
+
+  expect_equal(
+    rowSums(ce$time_df[,c("lang_dist", "lang_nodist", "nolang_dist", "nolang_nodist")]),
+    ce$time_df$denominator_sum)
 })
 

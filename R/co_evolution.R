@@ -74,7 +74,7 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   # Identify which clades are under a ceratin time point
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
   # cuts = head(seq(0, max_tree_depth, by = generation_time), -1)
-  cuts = seq(0, max_tree_depth, by = generation_time)
+  cuts = seq(0, max_tree_depth + generation_time, by = generation_time)
   nh <- ape::node.depth.edgelength(tree)
   nh <- max(nh) - nh
 
@@ -88,7 +88,7 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
     res = c(names(descendants[tree$edge[ind, 2]]), unlist(descendants[tree$edge[ind, 2]]))
 
     # special case for max
-    if(cut == max(nh)){
+    if(cut >= max(nh)){
       res = node_dt$node
     }
 
