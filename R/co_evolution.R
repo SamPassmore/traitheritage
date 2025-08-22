@@ -29,8 +29,8 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   descendants = phangorn::Descendants(tree, type = "all")
   names(descendants) = seq_along(descendants)
 
-  dp_df[,idx := do.call(paste_sort, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
-
+  # dp_df[,idx := do.call(paste_sort, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
+  dp_df[,idx := paste(pmin(V1, V2), pmax(V1, V2), sep = " ")]
   # Create alias names for taxa
   ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
 
