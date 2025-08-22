@@ -1,5 +1,9 @@
 ## trait co-evolution
 
+paste_sort = function(row_num, col_num){
+  apply(cbind(row_num, col_num), 1, function(x) paste(sort(x), collapse=" "))
+}
+
 #' Calculate the relative probability of a shared trait and distance
 #'
 #' @param tree a phylogenetic tree of classe phylo
@@ -44,10 +48,6 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   dm = as.data.table(dm)
   # dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
   dm = dm[ref, on = "row == taxa", `:=`(trait1 = trait, row_num = ind)][ref, on = "col == taxa", `:=`(trait2 = trait, col_num = ind)]
-
-  paste_sort = function(row_num, col_num){
-    apply(cbind(row_num, col_num), 1, function(x) paste(sort(x), collapse=" "))
-  }
 
   dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("row_num", "col_num")]
 

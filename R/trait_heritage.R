@@ -7,7 +7,7 @@
 #' @return a list containing two dataframes. by_trait contains the probability calculation at each timestep for each level of the trait. summary shows the probability across trait values for each time step.
 #' @export
 #'
-trait_heritage = function(tree, trait, generation_time){
+trait_heritage = function(tree, trait, generation_time, condition = trait.x == trait.y){
 
   ## Tests
   if(any(is.na(trait))) stop("No NA trait values are allowed.")
@@ -43,7 +43,8 @@ trait_heritage = function(tree, trait, generation_time){
     ## Results by each level of the trait
     by_trait = result,
     ## Summary of results by generation
-    summary = summary)
+    summary = summary,
+    phylo_structure = dp_df)
   )
 }
 
