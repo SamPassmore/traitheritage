@@ -18,7 +18,7 @@ trait_heritage = function(tree, trait, generation_time){
   dp_df = .get_hierarchy(tree)
 
   # make a reference table of taxa id to speed up taxa matching
-  ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
+  ref = data.table(taxa = tree$tip.label, ind = 1:length(tree$tip.label))
   trait_dt = data.table(taxa = names(trait), trait = trait)
   ref = ref[trait_dt, on = "taxa"]
 
@@ -68,7 +68,7 @@ trait_heritage_specific = function(tree, trait, generation_time, condition = 1){
   dp_df = .get_hierarchy(tree)
 
   # make a reference table of taxa id to speed up taxa matching
-  ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
+  ref = data.table(taxa = tree$tip.label, ind = 1:length(tree$tip.label))
   trait_dt = data.table(taxa = names(trait), trait = trait)
   ref = ref[trait_dt, on = "taxa"]
 
@@ -78,12 +78,14 @@ trait_heritage_specific = function(tree, trait, generation_time, condition = 1){
 
   # identify shared traits
   dp_df[, trait := trait.x == trait.y & trait.x == condition]
-  dp_df[, trait_named := ifelse(trait, trait.x, "DIFF")]
+  dp_df[, trait_named := ifelse(trait, trait.x,
+                                ifelse(trait.x == trait.y & trait.x != condition, trait.x,
+                                       "DIFF"))]
 
   # Identify which clades are under a certain time point
   # allows for non-ultrametric trees
 
-  result = .extrapolate_results(tree, dp_df, trait, generation_time)
+  result = .extrapolate_results(tree, dp_df, trait, generation_time, condition = condition)
 
   ## make summary
   summary = result[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),

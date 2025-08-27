@@ -17,17 +17,26 @@
   dp_df
 }
 
-.extrapolate_results = function(tree, dp_df, trait, generation_time){
+.extrapolate_results = function(tree, dp_df, trait, generation_time, condition = NULL){
 
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)])
   cuts = seq(generation_time, max_tree_depth, by = generation_time)
 
   # Full results table to fill in
-  result = data.table(
-    generation = rep(cuts, each = length(unique(trait))),
-    state = as.character(unique(trait))
-  )
-  setkey(result, generation, state)
+  if(is.null(condition)){
+    result = data.table(
+      generation = rep(cuts, each = length(unique(trait))),
+      state = as.character(unique(trait))
+    )
+    setkey(result, generation, state)
+  } else {
+    result = data.table(
+      generation = rep(cuts, each = length(unique(condition))),
+      state = condition
+    )
+    setkey(result, generation, state)
+  }
+
 
   nh <- ape::node.depth.edgelength(tree)
   # make the root 0
@@ -42,12 +51,16 @@
   numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
   numerator[,trait_named := as.character(trait_named)]
 
-  denominator = dp_df[, .(denominator_node = .N, time = first(time)), by = "node"][order(time, decreasing = FALSE)]
-  denominator[,denominator_sum := cumsum(denominator_node)]
+  if(is.null(condition)){
+    denominator = dp_df[, .(denominator_node = .N, time = first(time)), by = c("node")][order(time, decreasing = FALSE)]
+    denominator[,denominator_sum := cumsum(denominator_node)]
+  } else {
+    denominator = custom_denomcumsum(dp_df, tree, condition = condition)
+  }
 
   # Full node table
   node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
-                           trait_named = as.character(unique(trait)),
+                           trait_named = condition,
                            stringsAsFactors = FALSE)
   setDT(node_table, key = c("node", "trait_named"))
 
@@ -77,4 +90,21 @@
 
   # subset to columns of interest
   result[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
+}
+
+# Calculate the conditional cumsum based on whether a clade contains the trait of interest
+custom_denomcumsum = function(dp_df, tree, condition){
+  ## if a new pair includes the trait of interest then calculate the cumulative proability of that node and all descendant nodes
+  nodes = unique(dp_df$node)
+  denominator = c()
+  for(i in 1:length(nodes)){
+    nn = nodes[i]
+    ss = dp_df[node == nn,]
+    if(any(ss$trait.x == condition, ss$trait.y == condition)){
+      descendants = phangorn::Descendants(tree, nn, type = "all")
+      denominator[i] = dp_df[node %in% c(nn, descendants),.N]
+    }
+  }
+  dd = data.table(node = nodes, denominator_sum = denominator)
+  dd[unique(dp_df[, .(node, time)]), on = .(node), nomatch = NA]
 }

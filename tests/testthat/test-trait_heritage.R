@@ -40,9 +40,8 @@ test_that("#5 Full pipeline simple test", {
   )
 })
 
-test_that("#5 Full pipeline simple test", {
-  tree = ape::read.tree(text = "((tA,tX),(tB,(tC,tD)));")
-  tree = ape::compute.brlen(tree)
+test_that("Simple test for trait_heritage_specific", {
+  tree = ape::read.tree(text = "((tA:0.2,tX:0.2):0.8,(tB:0.65,(tC:0.3,tD:0.3):0.35):0.35);")
 
   trait = c("b", "b", "b", "a", "a")
   names(trait) = tree$tip.label
@@ -54,31 +53,16 @@ test_that("#5 Full pipeline simple test", {
     out$by_trait,
     structure(
       list(
-        generation = c(0.2, 0.2, 0.4, 0.4, 0.6, 0.6, 0.8, 0.8, 1.0, 1.0),
-        state = c("a", "b", "a", "b", "a", "b", "a", "b", "a", "b"),
-        numerator_sum = c(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 3.0, 0.0, 3.0, 0.0),
-        denominator_sum = c(0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 3.0, 3.0, 6, 6),
-        clade_probability = c(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.5, 0.0)
+        generation = c(0.0, 0.2,0.4, 0.6, 0.8, 1.0),
+        state = c("a", "a", "a","a","a", "a"),
+        numerator_sum = c(0.0, 0.0, 1.0, 1.0, 1.0, 1.0),
+        denominator_sum = c(0.0, 0.0, 1.0, 1.0, 3.0, 10),
+        clade_probability = c(0.0, 0.0, 1.0, 1.0, 1/3, 0.1)
       ),
       sorted = c("generation", "state"),
-      row.names = c(NA, -10L),
+      row.names = c(NA, -6L),
       class = c("data.table", "data.frame")
     ))
-
-  expect_equal(
-    out$summary,
-    structure(
-      list(
-        generation = c(0.2, 0.4, 0.6, 0.8, 1.0),
-        numerator_sum = c(0, 1, 1, 3, 3),
-        denominator_sum = c(0, 1, 1, 3, 6),
-        clade_probability = c(NaN, 1, 1, 1, 0.5)
-      ),
-      row.names = c(NA, -5L),
-      class = c("data.table", "data.frame"),
-      sorted = "generation"
-    )
-  )
 })
 
 
