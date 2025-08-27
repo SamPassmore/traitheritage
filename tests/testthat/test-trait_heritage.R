@@ -8,7 +8,48 @@ test_that("#5 Full pipeline simple test", {
 
   ## Because A & B are singletons, they are not counted.
   ## Then CD are the same so the probability of a shared trait is 1
-  out = trait_heritage(tree, trait, generation_time = 0.2, condition = "trait.x == trait.y")
+  out = trait_heritage(tree, trait, generation_time = 0.2)
+  expect_equal(
+    out$by_trait,
+    structure(
+      list(
+        generation = c(0.2, 0.2, 0.4, 0.4, 0.6, 0.6, 0.8, 0.8, 1.0, 1.0),
+        state = c("a", "b", "a", "b", "a", "b", "a", "b", "a", "b"),
+        numerator_sum = c(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 3.0, 0.0, 3.0, 0.0),
+        denominator_sum = c(0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 3.0, 3.0, 6, 6),
+        clade_probability = c(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.5, 0.0)
+      ),
+      sorted = c("generation", "state"),
+      row.names = c(NA, -10L),
+      class = c("data.table", "data.frame")
+    ))
+
+  expect_equal(
+    out$summary,
+    structure(
+      list(
+        generation = c(0.2, 0.4, 0.6, 0.8, 1.0),
+        numerator_sum = c(0, 1, 1, 3, 3),
+        denominator_sum = c(0, 1, 1, 3, 6),
+        clade_probability = c(NaN, 1, 1, 1, 0.5)
+      ),
+      row.names = c(NA, -5L),
+      class = c("data.table", "data.frame"),
+      sorted = "generation"
+    )
+  )
+})
+
+test_that("#5 Full pipeline simple test", {
+  tree = ape::read.tree(text = "((tA,tX),(tB,(tC,tD)));")
+  tree = ape::compute.brlen(tree)
+
+  trait = c("b", "b", "b", "a", "a")
+  names(trait) = tree$tip.label
+
+  ## Because A & B are singletons, they are not counted.
+  ## Then CD are the same so the probability of a shared trait is 1
+  out = trait_heritage_specific(tree, trait, generation_time = 0.2, condition = "a")
   expect_equal(
     out$by_trait,
     structure(
