@@ -59,9 +59,17 @@
   }
 
   # Full node table
-  node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
-                           trait_named = condition,
-                           stringsAsFactors = FALSE)
+
+  if(is.null(condition)){
+    node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
+                             trait_named = as.character(unique(trait)),
+                             stringsAsFactors = FALSE)
+  } else {
+    node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
+                             trait_named = condition,
+                             stringsAsFactors = FALSE)
+  }
+
   setDT(node_table, key = c("node", "trait_named"))
 
   # merge in numerator and denominator
