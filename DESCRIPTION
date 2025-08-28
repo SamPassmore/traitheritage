@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Sam Passmore
 Maintainer: Sam Passmore <u1123115@anu.edu.au>
 Description: Inferential methods for calculating the phylogenetic heritage of taxa traits. 
-License: What license is it under?
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Suggests: 
@@ -14,9 +14,10 @@ Suggests:
 Config/testthat/edition: 3
 Imports: 
     ape,
+    caper,
     data.table,
     dplyr,
-    foreach,
+    pbapply,
     phangorn,
-    reshape2
+    phytools
 RoxygenNote: 7.3.2

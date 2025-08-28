@@ -28,13 +28,13 @@
       generation = rep(cuts, each = length(unique(trait))),
       state = as.character(unique(trait))
     )
-    setkey(result, generation, state)
+    setkey(result, "generation", "state")
   } else {
     result = data.table(
       generation = rep(cuts, each = length(unique(condition))),
       state = condition
     )
-    setkey(result, generation, state)
+    setkey(result, "generation", "state")
   }
 
 
