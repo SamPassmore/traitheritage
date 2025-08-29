@@ -55,7 +55,7 @@
     # Create results table for later
     result = data.table(
       generation = rep(cuts, each = length(unique(condition))),
-      state = condition
+      state = as.character(condition)
     )
     setkey(result, "generation", "state")
 
