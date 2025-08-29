@@ -31,7 +31,7 @@
   dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 
   # Calculate shared traits by node times and order by time
-  numerator = dp_df[trait == TRUE, .(numerator_node = .N, time = first(time)), by = c("node", "trait_named")][order(time, decreasing = FALSE)]
+  numerator = dp_df[, .(numerator_node = .N, time = first(time)), by = c("node", "trait_named")][order(time, decreasing = FALSE)]
   numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
   numerator[,trait_named := as.character(trait_named)]
 
