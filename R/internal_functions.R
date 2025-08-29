@@ -22,22 +22,6 @@
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)])
   cuts = seq(generation_time, max_tree_depth, by = generation_time)
 
-  # Full results table to fill in
-  if(is.null(condition)){
-    result = data.table(
-      generation = rep(cuts, each = length(unique(trait))),
-      state = as.character(unique(trait))
-    )
-    setkey(result, "generation", "state")
-  } else {
-    result = data.table(
-      generation = rep(cuts, each = length(unique(condition))),
-      state = condition
-    )
-    setkey(result, "generation", "state")
-  }
-
-
   nh <- ape::node.depth.edgelength(tree)
   # make the root 0
   nh <- max(nh) - nh
@@ -52,21 +36,35 @@
   numerator[,trait_named := as.character(trait_named)]
 
   if(is.null(condition)){
+    # Create results table for later
+    result = data.table(
+      generation = rep(cuts, each = length(unique(trait))),
+      state = as.character(unique(trait))
+    )
+    setkey(result, "generation", "state")
+
+    # Calculate denominator
     denominator = dp_df[, .(denominator_node = .N, time = first(time)), by = c("node")][order(time, decreasing = FALSE)]
     denominator[,denominator_sum := cumsum(denominator_node)]
-  } else {
-    denominator = custom_denomcumsum(dp_df, tree, condition = condition)
-  }
 
-  # Full node table
-
-  if(is.null(condition)){
+    # Calculate Node table
     node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
                              trait_named = as.character(unique(trait)),
                              stringsAsFactors = FALSE)
   } else {
+    # Create results table for later
+    result = data.table(
+      generation = rep(cuts, each = length(unique(condition))),
+      state = condition
+    )
+    setkey(result, "generation", "state")
+
+    # Calculate denominator conditional on whether trait of interest exists in the clade
+    denominator = custom_denomcumsum(dp_df, tree, condition = condition)
+
+    # make the node table
     node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
-                             trait_named = condition,
+                             trait_named = as.character(condition),
                              stringsAsFactors = FALSE)
   }
 
