@@ -65,6 +65,31 @@ test_that("Simple test for trait_heritage_specific", {
     ))
 })
 
+test_that("Reintroduce NAs in trait specific", {
+  tree = ape::read.tree(text = "(((t1:0.21,t2:0.21):0.3,(t3:0.25, t4:0.25):0.25):0.5,(t5:0.41, t6:0.41):0.6);")
+
+  trait = c("a", "a", "b", "b", "a", "a")
+  names(trait) = tree$tip.label
+
+  ## Because A & B are singletons, they are not counted.
+  ## Then CD are the same so the probability of a shared trait is 1
+  out = trait_heritage_specific(tree, trait, generation_time = 0.2, condition = "a")
+  expect_equal(
+    out$by_trait,
+    structure(
+      list(
+        generation = c(0.0, 0.2,0.4, 0.6, 0.8, 1.0),
+        state = c("a", "a", "a","a","a", "a"),
+        numerator_sum = c(0.0, 0.0, 1.0, 1.0, 1.0, 1.0),
+        denominator_sum = c(0.0, 0.0, 1.0, 1.0, 3.0, 10),
+        clade_probability = c(0.0, 0.0, 1.0, 1.0, 1/3, 0.1)
+      ),
+      sorted = c("generation", "state"),
+      row.names = c(NA, -6L),
+      class = c("data.table", "data.frame")
+    ))
+})
+
 
 test_that("#6 Pipeline NA test", {
   t = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
