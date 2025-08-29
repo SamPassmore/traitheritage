@@ -27,8 +27,8 @@ trait_heritage = function(tree, trait, generation_time){
   dp_df = merge.data.table(dp_df, ref, by.x = "V2", by.y = "ind", all.x = TRUE)
 
   # identify shared traits
-  dp_df[, trait := trait.x == trait.y]
-  dp_df[, trait_named := ifelse(trait.x == trait.y, trait.x, "DIFF")]
+  dp_df[, "trait" := trait.x == trait.y]
+  dp_df[, "trait_named" := ifelse(trait.x == trait.y, trait.x, "DIFF")]
 
   # Identify which clades are under a certain time point
   # allows for non-ultrametric trees
@@ -36,8 +36,8 @@ trait_heritage = function(tree, trait, generation_time){
   result = .extrapolate_results(tree, dp_df, trait, generation_time)
 
   ## make summary
-  summary = result[,.(numerator_sum = sum(numerator_sum), denominator_sum = first(denominator_sum)),
-                  by = "generation"][,clade_probability := numerator_sum / denominator_sum]
+  summary = result[,.("numerator_sum" = sum(numerator_sum), "denominator_sum" = first(denominator_sum)),
+                  by = "generation"][,"clade_probability" := numerator_sum / denominator_sum]
 
   return(list(
     ## Results by each level of the trait

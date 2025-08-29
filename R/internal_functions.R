@@ -111,7 +111,8 @@ custom_denomcumsum = function(dp_df, tree, condition){
     if(any(ss$trait.x == condition, ss$trait.y == condition)){
       descendants = phangorn::Descendants(tree, nn, type = "all")
       denominator[i] = dp_df[node %in% c(nn, descendants),.N]
-    }
+    } else {
+      denominator[i] = NA}
   }
   dd = data.table(node = nodes, denominator_sum = denominator)
   dd[unique(dp_df[, .(node, time)]), on = .(node), nomatch = NA]
