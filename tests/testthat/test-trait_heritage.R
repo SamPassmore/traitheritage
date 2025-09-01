@@ -122,9 +122,52 @@ test_that("#6 No matches", {
 
 })
 
+test_that("Works with characters and numeric", {
+  tree = ape::read.tree(text = "(((t1:0.15,t2:0.15):0.35,(t3:0.25, t4:0.25):0.25):0.5,(t5:0.35, t6:0.35):0.65);")
+
+  trait = c("a", "a", "b", "b", "a", "a")
+  names(trait) = tree$tip.label
+
+  ## Because A & B are singletons, they are not counted.
+  ## Then CD are the same so the probability of a shared trait is 1
+  out = trait_heritage_specific(tree, trait, generation_time = 0.2, condition = "a")
+  expect_equal(
+    out$by_trait,
+    structure(
+      list(
+        generation = c(0.2,0.4, 0.6, 0.8, 1.0),
+        state = c("a", "a","a","a", "a"),
+        numerator_sum = c(1.0, 2.0, 2.0, 2.0, 6.0),
+        denominator_sum = c(1.0, 2.0, 7.0, 7.0, 15.0),
+        clade_probability = c(1.0, 1.0, 0.285714286, 0.285714286, 0.4)
+      ),
+      row.names = c(NA, -5L),
+      class = c("data.table", "data.frame")
+    ))
+
+  ## Numbers
+  trait = c(1, 1, 0, 0, 1, 1)
+  names(trait) = tree$tip.label
+
+  out = trait_heritage_specific(tree, trait, generation_time = 0.2, condition = 1)
+  expect_equal(
+    out$by_trait,
+    structure(
+      list(
+        generation = c(0.2,0.4, 0.6, 0.8, 1.0),
+        state = as.character(c(1, 1, 1, 1, 1)),
+        numerator_sum = c(1.0, 2.0, 2.0, 2.0, 6.0),
+        denominator_sum = c(1.0, 2.0, 7.0, 7.0, 15.0),
+        clade_probability = c(1.0, 1.0, 0.285714286, 0.285714286, 0.4)
+      ),
+      row.names = c(NA, -5L),
+      class = c("data.table", "data.frame")
+    ))
+
+})
+
 
 test_that("#1. Complex test", {
-
   t_file = test_path("testdata", "20240617_CBES_bModelTest_adj-papua_n.mcct.trees")
   t_file = test_path("testdata", "STATE_140990000.nex")
   md_file = test_path("testdata", "language_metadata.csv")

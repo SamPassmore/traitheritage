@@ -60,7 +60,7 @@
     setkey(result, "generation", "state")
 
     numdenom = custom_counter(dp_df, tree, condition = condition)
-
+    numdenom[, trait_named := as.character(trait_named)]
     numerator = numdenom[,.(node, time, numerator_sum, trait_named)]
     denominator = numdenom[,.(node, time, denominator_sum, trait_named)]
 
@@ -80,6 +80,7 @@
   # Identify cuts and convert to numeric
   node_table[, time.bin := cut(time, c(-Inf, cuts), labels = cuts)]
   node_table[, time.bin := as.character(levels(time.bin))[time.bin]]
+  node_table[, trait_named := as.character(trait_named)]
   setkey(node_table, time)
 
   # merge the node table to the result table
