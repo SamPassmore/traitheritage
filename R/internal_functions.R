@@ -17,7 +17,7 @@
   dp_df
 }
 
-.extrapolate_results = function(tree, dp_df, trait, generation_time, condition = NULL){
+.extrapolate_results = function(tree, dp_df, trait, generation_time, condition = NULL, tolerance = 2){
 
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)])
   cuts = seq(generation_time, max_tree_depth, by = generation_time)
@@ -30,12 +30,12 @@
   nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = nh)
   dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 
-  # Calculate shared traits by node times and order by time
-  numerator = dp_df[, .(numerator_node = .N, time = first(time)), by = c("node", "trait_named")][order(time, decreasing = FALSE)]
-  numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
-  numerator[,trait_named := as.character(trait_named)]
-
   if(is.null(condition)){
+    # Calculate shared traits by node times and order by time
+    numerator = dp_df[, .(numerator_node = .N, time = first(time)), by = c("node", "trait_named")][order(time, decreasing = FALSE)]
+    numerator[,numerator_sum := cumsum(numerator_node), by = c("trait_named")]
+    numerator[,trait_named := as.character(trait_named)]
+
     # Create results table for later
     result = data.table(
       generation = rep(cuts, each = length(unique(trait))),
@@ -59,11 +59,10 @@
     )
     setkey(result, "generation", "state")
 
-    # subset numerator to conditions of interest
-    numerator = numerator[trait_named == condition,]
+    numdenom = custom_counter(dp_df, tree, condition = condition)
 
-    # Calculate denominator conditional on whether trait of interest exists in the clade
-    denominator = custom_denomcumsum(dp_df, tree, condition = condition)
+    numerator = numdenom[,.(node, time, numerator_sum, trait_named)]
+    denominator = numdenom[,.(node, time, denominator_sum, trait_named)]
 
     # make the node table
     node_table = expand.grid(node = as.character((length(tree$tip.label)+1):(2*length(tree$tip.label)-1)),
@@ -79,12 +78,19 @@
   node_table = node_table[order(time),]
   node_table[, numerator_sum := nafill(numerator_sum, "locf"), by = c("trait_named")]
   # Identify cuts and convert to numeric
-  node_table[, time.bin := cut(time, cuts, labels = cuts[-1])]
-  node_table[, time.bin := as.numeric(levels(time.bin))[time.bin]]
+  node_table[, time.bin := cut(time, c(-Inf, cuts), labels = cuts)]
+  node_table[, time.bin := as.character(levels(time.bin))[time.bin]]
   setkey(node_table, time)
 
   # merge the node table to the result table
-  result = merge(result, node_table, by.x = c("generation", "state"), by.y = c("time.bin", "trait_named"), all = TRUE)
+  if(is.null(condition)){
+    result = merge(result[, generation := as.character(generation)], node_table, by.x = c("generation", "state"), by.y = c("time.bin", "trait_named"), all = TRUE)
+  } else {
+    result = merge(result[,.(generation, state)][, generation := as.character(generation)], node_table[,.SD[.N], by = time.bin][,.(time.bin, numerator_sum, denominator_sum)],
+                   by.x = c("generation"), by.y = c("time.bin"), all = TRUE)
+  }
+  result = result[, generation := as.numeric(generation)][order(generation)]
+
   # Fill in the missing data, with the previous data (no node changes)
   result = result[, numerator_sum := nafill(numerator_sum, "locf"), by = c("generation", "state")]
   result = result[, `:=` (numerator_sum = nafill(numerator_sum, "locf"),
@@ -102,24 +108,61 @@
 }
 
 # Calculate the conditional cumsum based on whether a clade contains the trait of interest
-custom_denomcumsum = function(dp_df, tree, condition){
+# custom_denomcumsum = function(dp_df, tree, condition){
+#   ## if a new pair includes the trait of interest then calculate the cumulative proability of that node and all descendant nodes
+#   dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y)][order(time)]
+#   dd[, tp := paste0(taxa.x, taxa.y),]
+#   nodes = unique(dd$node)
+#   denominator = list()
+#   for(i in 1:length(nodes)){
+#     nn = nodes[i]
+#     ss = dd[node == nn,]
+#     if(any(ss$trait.x == condition, ss$trait.y == condition)){
+#       descendants = phangorn::Descendants(tree, nn, type = "all")
+#       denominator[[i]] = unlist(dd[node %in% c(nn, descendants),.(tp)])
+#     } else {
+#       denominator[[i]] = c()
+#       }
+#   }
+#   denominator_sum = sapply(seq_along(denominator), function(i) {
+#     length(unique(unlist(denominator[1:i])))
+#   })
+#   dd = data.table(node = nodes, denominator_sum = denominator_sum, time = dd$time) # cd is clade denominator
+#   dd
+# }
+
+custom_counter = function(dp_df, tree, condition){
   ## if a new pair includes the trait of interest then calculate the cumulative proability of that node and all descendant nodes
-  nodes = unique(dp_df$node)
-  denominator = c()
+  dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y)][order(time)]
+  dd[, tp := paste0(taxa.x, taxa.y),]
+  nodes = unique(dd$node)
+  denominator = list()
+  numerator = list()
   for(i in 1:length(nodes)){
     nn = nodes[i]
-    ss = dp_df[node == nn,]
+    ss = dd[node == nn,]
     if(any(ss$trait.x == condition, ss$trait.y == condition)){
       descendants = phangorn::Descendants(tree, nn, type = "all")
-      denominator[i] = dp_df[node %in% c(nn, descendants),.N]
+      denominator[[i]] = unlist(dd[node %in% c(nn, descendants),.(tp)])
+      numerator[[i]] = unlist(dd[node %in% c(nn, descendants) & trait.x == trait.y & trait.x == condition,.(tp)])
     } else {
-      denominator[i] = NA}
+      denominator[[i]] = c()
+      numerator[[i]] = c()
+    }
   }
-  dd = data.table(node = nodes, cd = denominator) # cd is clade denominator
-  dd[, cd := ifelse(is.na(dd$cd), 0, dd$cd)] # missing values add 0 to the denominator
-  ## Denominator is the problem here. Need to be more clever!
-  dd = dd[unique(dp_df[, .(node, time)]), on = .(node), nomatch = NA][order(time)]
-  dd$denominator_sum = c(dd$cd[1], dd$cd[-(nrow(dd) - 1)] + dd$cd[-1])
-  dd$denominator_sum[nrow(dd)] = dd$cd[nrow(dd)]
-  dd
+  denominator_sum = sapply(seq_along(denominator), function(i) {
+    length(unique(unlist(denominator[1:i])))
+  })
+  numerator_sum = sapply(seq_along(denominator), function(i) {
+    length(unique(unlist(numerator[1:i])))
+  })
+  out = data.table(
+    node = nodes,
+    time = unique(dd$time),
+    numerator_sum = numerator_sum,
+    denominator_sum = denominator_sum,
+    trait_named = condition
+  ) # cd is clade denominator
+  out
 }
+

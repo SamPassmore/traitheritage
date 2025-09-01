@@ -1,4 +1,3 @@
-
 test_that("#5 Full pipeline simple test", {
   tree = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
   tree = ape::compute.brlen(tree)
@@ -19,7 +18,6 @@ test_that("#5 Full pipeline simple test", {
         denominator_sum = c(0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 3.0, 3.0, 6, 6),
         clade_probability = c(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.5, 0.0)
       ),
-      sorted = c("generation", "state"),
       row.names = c(NA, -10L),
       class = c("data.table", "data.frame")
     ))
@@ -34,8 +32,7 @@ test_that("#5 Full pipeline simple test", {
         clade_probability = c(NaN, 1, 1, 1, 0.5)
       ),
       row.names = c(NA, -5L),
-      class = c("data.table", "data.frame"),
-      sorted = "generation"
+      class = c("data.table", "data.frame")
     )
   )
 })
@@ -53,20 +50,19 @@ test_that("Simple test for trait_heritage_specific", {
     out$by_trait,
     structure(
       list(
-        generation = c(0.0, 0.2,0.4, 0.6, 0.8, 1.0),
-        state = c("a", "a", "a","a","a", "a"),
-        numerator_sum = c(0.0, 0.0, 1.0, 1.0, 1.0, 1.0),
-        denominator_sum = c(0.0, 0.0, 1.0, 1.0, 3.0, 10),
-        clade_probability = c(0.0, 0.0, 1.0, 1.0, 1/3, 0.1)
+        generation = c(0.2,0.4, 0.6, 0.8, 1.0),
+        state = c("a", "a","a","a", "a"),
+        numerator_sum = c(0.0, 1.0, 1.0, 1.0, 1.0),
+        denominator_sum = c(0.0, 1.0, 1.0, 3.0, 10),
+        clade_probability = c(0.0, 1.0, 1.0, 1/3, 0.1)
       ),
-      sorted = c("generation", "state"),
-      row.names = c(NA, -6L),
+      row.names = c(NA, -5L),
       class = c("data.table", "data.frame")
     ))
 })
 
 test_that("Reintroduce NAs in trait specific", {
-  tree = ape::read.tree(text = "(((t1:0.21,t2:0.21):0.29,(t3:0.25, t4:0.25):0.25):0.5,(t5:0.41, t6:0.41):0.59);")
+  tree = ape::read.tree(text = "(((t1:0.15,t2:0.15):0.35,(t3:0.25, t4:0.25):0.25):0.5,(t5:0.35, t6:0.35):0.65);")
 
   trait = c("a", "a", "b", "b", "a", "a")
   names(trait) = tree$tip.label
@@ -78,18 +74,16 @@ test_that("Reintroduce NAs in trait specific", {
     out$by_trait,
     structure(
       list(
-        generation = c(0.0, 0.2,0.4, 0.6, 0.8, 1.0),
-        state = c("a", "a", "a","a","a", "a"),
-        numerator_sum = c(0.0, 0.0, 1.0, 1.0, 1.0, 1.0),
-        denominator_sum = c(0.0, 0.0, 1.0, 1.0, 3.0, 10),
-        clade_probability = c(0.0, 0.0, 1.0, 1.0, 1/3, 0.1)
+        generation = c(0.2,0.4, 0.6, 0.8, 1.0),
+        state = c("a", "a","a","a", "a"),
+        numerator_sum = c(1.0, 2.0, 2.0, 2.0, 6.0),
+        denominator_sum = c(1.0, 2.0, 7.0, 7.0, 15.0),
+        clade_probability = c(1.0, 1.0, 0.285714286, 0.285714286, 0.4)
       ),
-      sorted = c("generation", "state"),
-      row.names = c(NA, -6L),
+      row.names = c(NA, -5L),
       class = c("data.table", "data.frame")
     ))
 })
-
 
 test_that("#6 Pipeline NA test", {
   t = ape::read.tree(text = "(tA,(tB,(tC,tD)));")
