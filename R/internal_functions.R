@@ -59,6 +59,9 @@
     )
     setkey(result, "generation", "state")
 
+    # subset numerator to conditions of interest
+    numerator = numerator[trait_named == condition,]
+
     # Calculate denominator conditional on whether trait of interest exists in the clade
     denominator = custom_denomcumsum(dp_df, tree, condition = condition)
 
@@ -112,6 +115,11 @@ custom_denomcumsum = function(dp_df, tree, condition){
     } else {
       denominator[i] = NA}
   }
-  dd = data.table(node = nodes, denominator_sum = denominator)
-  dd[unique(dp_df[, .(node, time)]), on = .(node), nomatch = NA]
+  dd = data.table(node = nodes, cd = denominator) # cd is clade denominator
+  dd[, cd := ifelse(is.na(dd$cd), 0, dd$cd)] # missing values add 0 to the denominator
+  ## Denominator is the problem here. Need to be more clever!
+  dd = dd[unique(dp_df[, .(node, time)]), on = .(node), nomatch = NA][order(time)]
+  dd$denominator_sum = c(dd$cd[1], dd$cd[-(nrow(dd) - 1)] + dd$cd[-1])
+  dd$denominator_sum[nrow(dd)] = dd$cd[nrow(dd)]
+  dd
 }

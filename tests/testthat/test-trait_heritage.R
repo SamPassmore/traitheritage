@@ -66,7 +66,7 @@ test_that("Simple test for trait_heritage_specific", {
 })
 
 test_that("Reintroduce NAs in trait specific", {
-  tree = ape::read.tree(text = "(((t1:0.21,t2:0.21):0.3,(t3:0.25, t4:0.25):0.25):0.5,(t5:0.41, t6:0.41):0.6);")
+  tree = ape::read.tree(text = "(((t1:0.21,t2:0.21):0.29,(t3:0.25, t4:0.25):0.25):0.5,(t5:0.41, t6:0.41):0.59);")
 
   trait = c("a", "a", "b", "b", "a", "a")
   names(trait) = tree$tip.label
