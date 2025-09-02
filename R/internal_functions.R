@@ -108,30 +108,6 @@
   result[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
 }
 
-# Calculate the conditional cumsum based on whether a clade contains the trait of interest
-# custom_denomcumsum = function(dp_df, tree, condition){
-#   ## if a new pair includes the trait of interest then calculate the cumulative proability of that node and all descendant nodes
-#   dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y)][order(time)]
-#   dd[, tp := paste0(taxa.x, taxa.y),]
-#   nodes = unique(dd$node)
-#   denominator = list()
-#   for(i in 1:length(nodes)){
-#     nn = nodes[i]
-#     ss = dd[node == nn,]
-#     if(any(ss$trait.x == condition, ss$trait.y == condition)){
-#       descendants = phangorn::Descendants(tree, nn, type = "all")
-#       denominator[[i]] = unlist(dd[node %in% c(nn, descendants),.(tp)])
-#     } else {
-#       denominator[[i]] = c()
-#       }
-#   }
-#   denominator_sum = sapply(seq_along(denominator), function(i) {
-#     length(unique(unlist(denominator[1:i])))
-#   })
-#   dd = data.table(node = nodes, denominator_sum = denominator_sum, time = dd$time) # cd is clade denominator
-#   dd
-# }
-
 custom_counter = function(dp_df, tree, condition){
   ## if a new pair includes the trait of interest then calculate the cumulative proability of that node and all descendant nodes
   dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y)][order(time)]
