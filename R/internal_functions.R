@@ -132,8 +132,15 @@ custom_counter = function(dp_df, tree, condition, coevolution = FALSE){
         numerator[[i]] = unlist(dd[node %in% c(nn, descendants) & trait.x == trait.y & trait.x == condition,.(tp)])
       }
     } else {
-      denominator[[i]] = c()
-      numerator[[i]] = c()
+
+      if(coevolution){
+        numerator[[i]] = list(lang_dist = character(0), lang_nodist = character(0),
+             nolang_dist = character(0), nolang_nodist = character(0))
+        denominator[[i]] = c()
+      } else {
+        denominator[[i]] = c()
+        numerator[[i]] = c()
+      }
     }
   }
   denominator_sum = sapply(seq_along(denominator), function(i) {
