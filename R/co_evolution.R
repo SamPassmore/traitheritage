@@ -242,13 +242,13 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
 }
 
 
-trait_coevolution_permutation_specific =  function(tree, trait, distance_matrix, generation_time, cut_off){
+trait_coevolution_permutation_specific = function(tree, trait, distance_matrix, generation_time, cut_off, condition){
   set.seed(seed)
   # Permuted results
   permuted_list = lapply(1:n_permutations, function(i){
     p_trait = trait
     names(p_trait) = names(p_trait)[sample(1:length(p_trait))]
-    trait_coevolution(tree, p_trait, distance_matrix, generation_time, cut_off)
+    trait_coevolution_specific(tree, p_trait, distance_matrix, generation_time, cut_off, condition)
   })
 
   by_trait = lapply(permuted_list, "[[", 1)
