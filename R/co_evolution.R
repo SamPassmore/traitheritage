@@ -144,6 +144,16 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
   if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
   if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
+
+  max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
+  cuts = seq(0, max_tree_depth + generation_time, by = generation_time)
+
+  result = data.table(
+    generation = rep(cuts, each = length(unique(condition))),
+    state = as.character(condition)
+  )
+  setkey(result, "generation", "state")
+
   # # clades sets at each node
   dp_df = .get_hierarchy(tree, .DescendantsType = "all")
 
@@ -179,63 +189,70 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
   dm[, lang_trait := trait.x == trait.y & trait.x == condition,]
 
   dp_df = dp_df[dm, on = "idx"]
+  dp_df = get_time(dp_df, tree)
 
-  denominator = .extrapolate_results(tree, dp_df, trait$trait, generation_time = generation_time, condition = condition)
+  denominator = custom_counter(dp_df, tree, condition)
+
+
+
 
   ## Possible conditions
   ## D & L, ND & L, D & NL, ND & NL
   node_dt = dp_df[, list(lang_dist = sum(lang_trait & dist_trait),
                          lang_nodist = sum(lang_trait == TRUE & dist_trait == FALSE),
                          nolang_dist = sum(lang_trait == FALSE & dist_trait == TRUE),
-                         nolang_nodist = sum(lang_trait == FALSE & dist_trait == FALSE),
-                         denominator_sum = length(lang_trait)),
+                         nolang_nodist = sum(lang_trait == FALSE & dist_trait == FALSE)
+                         ),
                   by = node]
+
+  node_dt = node_dt[denominator, on = "node"]
+
   node_dt[, `:=`(p_lang_dist = lang_dist / denominator_sum,
                  p_lang_nodist = lang_nodist / denominator_sum,
                  p_nolang_dist = nolang_dist / denominator_sum,
                  p_nolang_nodist = nolang_nodist / denominator_sum)]
 
-  # Identify which clades are under a ceratin time point
-  max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)]) # allows for non-ultrametric trees
-  # cuts = head(seq(0, max_tree_depth, by = generation_time), -1)
-  cuts = seq(0, max_tree_depth + generation_time, by = generation_time)
-  nh <- ape::node.depth.edgelength(tree)
-  nh <- max(nh) - nh
+  node_dt[, time.bin := cut(time, c(-Inf, cuts), labels = cuts)]
+  node_dt[, time.bin := as.character(levels(time.bin))[time.bin]]
+  node_dt[, trait_named := as.character(trait_named)]
+  setkey(node_dt, time)
 
-  probs = lapply(cuts, function(cut){
-    ind <- which((nh[tree$edge[, 1]] > cut) &
-                   (nh[tree$edge[, 2]] <= cut))
+  result = merge(
+    result[, .(generation, state)][, generation := as.character(generation)],
+    node_dt[, .SD[.N], by = time.bin][, .(time.bin,
+                                          lang_dist,
+                                          lang_nodist,
+                                          nolang_dist,
+                                          nolang_nodist,
+                                          denominator_sum)],
+    by.x = c("generation"),
+    by.y = c("time.bin"),
+    all = TRUE
+  )
 
-    # res = names(descendants[tree$edge[ind, 2]])
-    # This is a hack to get all nodes and children nodes under a cut.
-    # Since we rely on a table on nodes, including taxa shouldn't cause an issue.
-    res = c(names(descendants[tree$edge[ind, 2]]), unlist(descendants[tree$edge[ind, 2]]))
+  result = result[, generation := as.numeric(generation)][order(generation)]
 
-    # special case for max
-    if(cut >= max(nh)){
-      res = node_dt$node
-    }
+  # Fill in the missing data, with the previous data (no node changes)
+  result = result[, `:=` (lang_dist = nafill(lang_dist, "locf"),
+                          lang_nodist = nafill(lang_nodist, "locf"),
+                          nolang_dist = nafill(nolang_dist, "locf"),
+                          nolang_nodist = nafill(nolang_nodist, "locf"),
+                          denominator_sum = nafill(denominator_sum, "locf"))]
 
-    ndt = node_dt[node %in% res]
-    oo = data.table(lang_dist = sum(ndt$lang_dist),
-                    lang_nodist = sum(ndt$lang_nodist),
-                    nolang_dist = sum(ndt$nolang_dist),
-                    nolang_nodist = sum(ndt$nolang_nodist),
-                    denominator_sum = sum(ndt$denominator_sum))
-    oo[, `:=`(p_lang_dist = lang_dist / denominator_sum,
-              p_lang_nodist = lang_nodist / denominator_sum,
-              p_nolang_dist = nolang_dist / denominator_sum,
-              p_nolang_nodist = nolang_nodist / denominator_sum)]
-  })
-  names(probs) = paste0("g_", cuts)
-
-  pp = data.table::rbindlist(probs, idcol = "generation")
+  # Calculate the probbilities
+  result = result[, `:=`(
+    p_lang_dist = lang_dist / denominator_sum,
+    p_lang_nodist = lang_nodist / denominator_sum,
+    p_nolang_dist = nolang_dist / denominator_sum,
+    p_nolang_nodist = nolang_nodist / denominator_sum
+  )
+  ]
 
   # Change all NA values to 0.
   # I assume the only time this arises is in singleton clades
-  pp[is.na(pp)] = 0
+  result[is.na(result)] = 0
 
-  return(list(time_df = pp, pairs_df = dp_df))
+  return(list(time_df = result, pairs_df = dp_df))
 }
 
 
