@@ -22,13 +22,8 @@
   max_tree_depth = max(ape::node.depth.edgelength(tree)[1:ape::Ntip(tree)])
   cuts = seq(generation_time, max_tree_depth, by = generation_time)
 
-  nh <- ape::node.depth.edgelength(tree)
-  # make the root 0
-  nh <- max(nh) - nh
-
-  # add times to dp_df
-  nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = nh)
-  dp_df = merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
+  # Add node times to dp_df
+  dp_df = get_time(dp_df, tree)
 
   if(is.null(condition)){
     # Calculate shared traits by node times and order by time
@@ -143,3 +138,14 @@ custom_counter = function(dp_df, tree, condition){
   out
 }
 
+get_time = function(dp_df, tree){
+
+  nh <- ape::node.depth.edgelength(tree)
+  # make the root 0
+  nh <- max(nh) - nh
+
+  # add times to dp_df
+  nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = nh)
+  # Output
+  merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
+}
