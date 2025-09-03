@@ -185,6 +185,13 @@ get_time = function(dp_df, tree){
 
   # add times to dp_df
   nh_dt = data.table(node = as.character(1:(length(tree$edge.length) + 1)), time = nh)
+
+  if(length(unique(nh_dt$time[nh_dt$time != 0])) != nrow(nh_dt[nh_dt$time != 0,])){
+    idx = duplicated(nh_dt$time) & nh_dt$time != 0 # times that are identical
+    nh_dt$time[idx] = nh_dt$time[idx] + runif(sum(idx), min = -.0000000001, max = .0000000001)
+    warning("Some nodes exist at exactly the same time. Since this causes problems with the analysis, a value of .0000000001 has been randomly added or subtracted to one or more of the duplicates.
+            Please be aware of this in your analysis.")
+  }
   # Output
   merge.data.table(dp_df, nh_dt, by = "node", all.x = TRUE)
 }

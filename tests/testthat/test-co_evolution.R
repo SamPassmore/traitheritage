@@ -81,6 +81,51 @@ test_that("Simple test: specific language matches", {
 
 })
 
+test_that("Same node heigts", {
+  tree = ape::read.tree(text = "(((t1:0.15,t2:0.15):0.35,(t3:0.25, t4:0.25):0.25):0.5,(t5:0.15, t6:0.15):0.85);")
+
+  trait = c("a", "a", "b", "b", "a", "a")
+  names(trait) = tree$tip.label
+
+
+  distances = matrix(
+    c(1, 2,
+      1, 2,
+      2, 1,
+      5, 6,
+      6, 5,
+      8, 8),
+    byrow = TRUE,
+    ncol = 2,
+    dimnames = list(tree$tip.label, c("X", "Y"))
+  )
+  distance_matrix = as.matrix(dist(distances))
+
+  cut_off = -1 # no distances are negative so this makes no distance pairs
+  generation_time = 0.2
+
+  # I know this will give a warning
+  result = suppressWarnings(
+    trait_coevolution_specific(tree, trait, distance_matrix, generation_time, cut_off, condition = "a")
+  )
+
+
+  expect_equal(
+    result$time_df$denominator_sum,
+    c(0, 2.0, 2.0, 7.0, 7.0, 15.0, 15.0)
+  )
+  expect_equal(
+    result$time_df$nolang_dist,
+    c(0, 0, 0, 0, 0, 0, 0)) # there should be no distance matches (cut_off = -1)
+
+  expect_equal(
+    result$time_df$lang_nodist,
+    c(0, 2, 2, 2, 2, 6, 6)
+  )
+
+})
+
+
 
 test_that("Complex test", {
   t_file = test_path("testdata", "20240617_CBES_bModelTest_adj-papua_n.mcct.trees")
