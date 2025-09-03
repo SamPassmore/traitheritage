@@ -103,9 +103,14 @@
   result[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
 }
 
-custom_counter = function(dp_df, tree, condition){
+custom_counter = function(dp_df, tree, condition, coevolution = FALSE){
   ## if a new pair includes the trait of interest then calculate the cumulative proability of that node and all descendant nodes
-  dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y)][order(time)]
+  if(coevolution){
+    dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y, lang_trait, dist_trait)][order(time)]
+  } else {
+    dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y)][order(time)]
+  }
+
   dd[, tp := paste0(taxa.x, taxa.y),]
   nodes = unique(dd$node)
   denominator = list()
@@ -116,7 +121,16 @@ custom_counter = function(dp_df, tree, condition){
     if(any(ss$trait.x == condition, ss$trait.y == condition)){
       descendants = phangorn::Descendants(tree, nn, type = "all")
       denominator[[i]] = unlist(dd[node %in% c(nn, descendants),.(tp)])
-      numerator[[i]] = unlist(dd[node %in% c(nn, descendants) & trait.x == trait.y & trait.x == condition,.(tp)])
+      if(coevolution){
+        numerator[[i]] = list(
+          lang_dist = unlist(dd[node %in% c(nn, descendants) & lang_trait & dist_trait,.(tp)]),
+          lang_nodist = unlist(dd[node %in% c(nn, descendants) & lang_trait & !dist_trait,.(tp)]),
+          nolang_dist = unlist(dd[node %in% c(nn, descendants) & !lang_trait & dist_trait,.(tp)]),
+          nolang_nodist = unlist(dd[node %in% c(nn, descendants) & !lang_trait & !dist_trait,.(tp)])
+        )
+      } else {
+        numerator[[i]] = unlist(dd[node %in% c(nn, descendants) & trait.x == trait.y & trait.x == condition,.(tp)])
+      }
     } else {
       denominator[[i]] = c()
       numerator[[i]] = c()
@@ -125,16 +139,41 @@ custom_counter = function(dp_df, tree, condition){
   denominator_sum = sapply(seq_along(denominator), function(i) {
     length(unique(unlist(denominator[1:i])))
   })
-  numerator_sum = sapply(seq_along(denominator), function(i) {
-    length(unique(unlist(numerator[1:i])))
-  })
-  out = data.table(
-    node = nodes,
-    time = unique(dd$time),
-    numerator_sum = numerator_sum,
-    denominator_sum = denominator_sum,
-    trait_named = condition
-  ) # cd is clade denominator
+
+  if(coevolution){
+    subnames = names(numerator[[1]])
+
+    numerator_sum = lapply(subnames, function(s) {
+      sapply(seq_along(numerator), function(i) {
+        length(unique(unlist(lapply(numerator[1:i], `[[`, s))))
+      })
+    })
+    names(numerator_sum) = subnames
+
+    out = data.table(
+      node = nodes,
+      time = unique(dd$time),
+      denominator_sum = denominator_sum,
+      trait_named = condition
+    ) # cd is clade denominator
+
+    out = cbind(out, data.frame(numerator_sum))
+
+  } else {
+    numerator_sum = sapply(seq_along(numerator), function(i) {
+      length(unique(unlist(numerator[1:i])))
+    })
+
+    out = data.table(
+      node = nodes,
+      time = unique(dd$time),
+      numerator_sum = numerator_sum,
+      denominator_sum = denominator_sum,
+      trait_named = condition
+    ) # cd is clade denominator
+  }
+
+
   out
 }
 

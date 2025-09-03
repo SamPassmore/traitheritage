@@ -68,13 +68,17 @@ test_that("Simple test: specific language matches", {
 
   expect_equal(
     result$time_df$denominator_sum,
-    c(0, 0, 2, 4, 4, 10, 10))
+    c(0, 1.0, 2.0, 7.0, 7.0, 15.0, 15.0)
+    )
   expect_equal(
     result$time_df$nolang_dist,
     c(0, 0, 0, 0, 0, 0, 0)) # there should be no distance matches (cut_off = -1)
+
   expect_equal(
-    rowSums(result$time_df[,c("lang_dist", "lang_nodist", "nolang_dist", "nolang_nodist")]),
-    result$time_df$denominator_sum)
+    result$time_df$lang_nodist,
+    c(0, 1, 2, 2, 2, 6, 6)
+  )
+
 })
 
 

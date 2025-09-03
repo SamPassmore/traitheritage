@@ -191,21 +191,7 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
   dp_df = dp_df[dm, on = "idx"]
   dp_df = get_time(dp_df, tree)
 
-  denominator = custom_counter(dp_df, tree, condition)
-
-
-
-
-  ## Possible conditions
-  ## D & L, ND & L, D & NL, ND & NL
-  node_dt = dp_df[, list(lang_dist = sum(lang_trait & dist_trait),
-                         lang_nodist = sum(lang_trait == TRUE & dist_trait == FALSE),
-                         nolang_dist = sum(lang_trait == FALSE & dist_trait == TRUE),
-                         nolang_nodist = sum(lang_trait == FALSE & dist_trait == FALSE)
-                         ),
-                  by = node]
-
-  node_dt = node_dt[denominator, on = "node"]
+  node_dt = custom_counter(dp_df, tree, condition, coevolution = TRUE)
 
   node_dt[, `:=`(p_lang_dist = lang_dist / denominator_sum,
                  p_lang_nodist = lang_nodist / denominator_sum,
