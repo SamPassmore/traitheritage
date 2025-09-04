@@ -248,7 +248,8 @@ trait_coevolution_permutation_specific = function(tree,
                                                   generation_time,
                                                   cut_off,
                                                   condition,
-                                                  n_permutation) {
+                                                  n_permutation,
+                                                  seed = 9872) {
 
   set.seed(seed)
   # Permuted results
