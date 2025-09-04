@@ -115,7 +115,7 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
 }
 
 
-trait_coevolution_permutation =  function(tree, trait, distance_matrix, generation_time, cut_off){
+trait_coevolution_permutation =  function(tree, trait, distance_matrix, generation_time, cut_off, n_permutation){
   set.seed(seed)
   # Permuted results
   permuted_list = lapply(1:n_permutations, function(i){
@@ -242,7 +242,14 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
 }
 
 
-trait_coevolution_permutation_specific = function(tree, trait, distance_matrix, generation_time, cut_off, condition){
+trait_coevolution_permutation_specific = function(tree,
+                                                  trait,
+                                                  distance_matrix,
+                                                  generation_time,
+                                                  cut_off,
+                                                  condition,
+                                                  n_permutation) {
+
   set.seed(seed)
   # Permuted results
   permuted_list = lapply(1:n_permutations, function(i){
