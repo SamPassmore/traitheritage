@@ -1,10 +1,14 @@
 ## trait co-evolution
 
-paste_sort = function(row_num, col_num){
+.paste_sort = function(row_num, col_num){
   apply(cbind(row_num, col_num), 1, function(x) paste(sort(x), collapse=" "))
 }
 
 #' Calculate the relative probability of a shared trait and distance
+#'
+#'@description
+#'This function is still under development
+#'
 #'
 #' @param tree a phylogenetic tree of classe phylo
 #' @param trait a numeric or character trait for each taxa
@@ -13,7 +17,7 @@ paste_sort = function(row_num, col_num){
 #' @param cut_off The distance cut off value (used to discretize distance)
 #'
 #' @return a list. time_df shows the probability for each paired category over time. pairs_df shows the data for each viable pair in the dataset.
-#' @export
+#' @keywords internal
 #'
 trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_off){
 
@@ -29,7 +33,6 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   descendants = phangorn::Descendants(tree, type = "all")
   names(descendants) = seq_along(descendants)
 
-  # dp_df[,idx := do.call(paste_sort, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
   dp_df[,idx := paste(pmin(V1, V2), pmax(V1, V2), sep = " ")]
   # Create alias names for taxa
   ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
@@ -49,7 +52,7 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
   # dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
   dm = dm[ref, on = "taxa.x == taxa", `:=`(trait.x = trait, row_num = ind)][ref, on = "taxa.y == taxa", `:=`(trait.y = trait, col_num = ind)]
 
-  dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("row_num", "col_num")]
+  dm[, idx:= do.call(.paste_sort, .SD), .SDcols= c("row_num", "col_num")]
 
   # Calculate distance cut-off
   dm[, dist_trait := value < cut_off,]
@@ -161,7 +164,6 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
   descendants = phangorn::Descendants(tree, type = "all")
   names(descendants) = seq_along(descendants)
 
-  # dp_df[,idx := do.call(paste_sort, c(.SD, sep = " ")), .SDcols = c("V1", "V2")]
   dp_df[,idx := paste(pmin(V1, V2), pmax(V1, V2), sep = " ")]
   # Create alias names for taxa
   ref = data.table(taxa = tree$tip.label, ind = as.numeric(as.factor(tree$tip.label)))
@@ -181,7 +183,7 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
   # dm = dm[ref, on = "row == taxa"][ref, on = "col == taxa"]
   dm = dm[ref, on = "taxa.x == taxa", `:=`(trait.x = trait, row_num = ind)][ref, on = "taxa.y == taxa", `:=`(trait.y = trait, col_num = ind)]
 
-  dm[, idx:= do.call(paste_sort, .SD), .SDcols= c("row_num", "col_num")]
+  dm[, idx:= do.call(.paste_sort, .SD), .SDcols= c("row_num", "col_num")]
 
   # Calculate distance cut-off
   dm[, dist_trait := value < cut_off,]
@@ -191,7 +193,7 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
   dp_df = dp_df[dm, on = "idx"]
   dp_df = get_time(dp_df, tree)
 
-  node_dt = custom_counter(dp_df, tree, condition, coevolution = TRUE)
+  node_dt = .custom_counter(dp_df, tree, condition, coevolution = TRUE)
 
   node_dt[, `:=`(p_lang_dist = lang_dist / denominator_sum,
                  p_lang_nodist = lang_nodist / denominator_sum,

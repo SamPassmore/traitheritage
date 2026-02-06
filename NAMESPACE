@@ -1,2 +1,4 @@
 exportPattern("^[[:alpha:]]+")
 import(data.table)
+importFrom("stats", "complete.cases", "runif", "time")
+importFrom("utils", "combn")

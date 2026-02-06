@@ -1,5 +1,16 @@
 # Internal functions
 
+#' Get Phylogenetic tree Hierarchy
+#'
+#'@description
+#'An internal function used to derive the hierarchical relationships between nodes in a phylogeny into a data.table
+#'
+#'
+#' @param tree A phylo object
+#' @param .DescendantsType
+#'
+#' @returns A data.table containing the hierarchical relationships between nodes of a phylogeny
+#' @export
 .get_hierarchy = function(tree, .DescendantsType = "tips"){
   ### First identify the hierachical relationship of the tree
   # clades sets at each node
@@ -54,7 +65,7 @@
     )
     setkey(result, "generation", "state")
 
-    numdenom = custom_counter(dp_df, tree, condition = condition)
+    numdenom = .custom_counter(dp_df, tree, condition = condition)
     numdenom[, trait_named := as.character(trait_named)]
     numerator = numdenom[,.(node, time, numerator_sum, trait_named)]
     denominator = numdenom[,.(node, time, denominator_sum, trait_named)]
@@ -103,7 +114,20 @@
   result[,c("generation", "state", "numerator_sum", "denominator_sum", "clade_probability")]
 }
 
-custom_counter = function(dp_df, tree, condition, coevolution = FALSE){
+#' Custom Counter across Phylogenetic Generations
+#'
+#'@description
+#'This function is still in development.
+#'
+#'
+#' @param dp_df a data.table from .get_hierarchy
+#' @param tree a phylogenetic tree
+#' @param condition the conditions to test (string)
+#' @param coevolution (Logical) Whether we are looking at the co-evolution of traits or not
+#'
+#' @keywords internal
+#'
+.custom_counter = function(dp_df, tree, condition, coevolution = FALSE){
   ## if a new pair includes the trait of interest then calculate the cumulative proability of that node and all descendant nodes
   if(coevolution){
     dd = dp_df[, .(node, time, trait.x, trait.y, taxa.x, taxa.y, lang_trait, dist_trait)][order(time)]
