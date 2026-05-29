@@ -8,8 +8,7 @@
 #' @param states a named vector of states to calculate clades from. Names must match tips.
 #'
 #' @return a data.frame containing information on the identified clades, the state they contain, and the tree they are from.
-#' @export
-#'
+#' @keywords internal
 .tmrca_onetree = function(tree, states){
   # Find all clades
   all.sub.trees = caper::clade.members.list(phy = tree, tip.labels = TRUE)
@@ -64,9 +63,15 @@
 #' @param states a named vector of states to calculate clades from. Names must match tips.
 #'
 #' @return a data.frame containing the dates of the MRCA of state clades for each tree in the posterior
-#'
-#'@export
-
+#' @export
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' tree <- ape::rcoal(10)
+#' states <- ape::rTraitDisc(tree)
+#' trees <- c(tree, tree, tree)
+#' tmrca(trees, states, progress = FALSE)
+#' }
 tmrca = function(trees, states, progress = TRUE){
 
   if(!inherits(trees, c("phylo", "multiPhylo"))){

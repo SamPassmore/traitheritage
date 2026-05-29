@@ -3,12 +3,27 @@
 ## Main function
 #' Calculate within and between variance for a trait in a tree
 #'
+#'@description
+#'This function is still under development and is not yet implemented.
+#'
 #' @param tree a phylogenetic tree
 #' @param generation_time the generation time to calculate across the phylogeny
 #' @param trait the trait of interest (numeric or character)
 #'
-
+#' @return a list with v_within and v_between data.tables (not yet implemented)
+#' @export
+#' @examples
+#' \dontrun{
+#' # within_between() is not yet implemented
+#' tree <- ape::read.tree(text = "(tA,(tB,(tC,tD)));")
+#' tree <- ape::compute.brlen(tree)
+#' trait <- c("a", "a", "b", "b")
+#' names(trait) <- tree$tip.label
+#' within_between(tree, generation_time = 0.2, trait)
+#' }
 within_between = function(tree, generation_time, trait){
+
+  stop("within_between() is not yet implemented")
 
   if(is.null(names(trait)) | !all(tree$tip.label %in% names(trait))){
     stop("the trait object must have names that match the tree tips")

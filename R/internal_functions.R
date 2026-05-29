@@ -10,7 +10,7 @@
 #' @param .DescendantsType
 #'
 #' @returns A data.table containing the hierarchical relationships between nodes of a phylogeny
-#' @export
+#' @keywords internal
 .get_hierarchy = function(tree, .DescendantsType = "tips"){
   ### First identify the hierachical relationship of the tree
   # clades sets at each node

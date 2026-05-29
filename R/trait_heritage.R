@@ -4,9 +4,16 @@
 #' @param trait a vector of traits, named for each taxa
 #' @param generation_time how frequently the trait probability should be calculated. Must be less than the height of the phylogeny.
 #'
-#' @return a list containing two dataframes. by_trait contains the probability calculation at each timestep for each level of the trait. summary shows the probability across trait values for each time step.
+#' @return a list containing two dataframes. by_trait contains the probability
+#'   calculation at each timestep for each level of the trait. summary shows
+#'   the probability across trait values for each time step.
 #' @export
-#'
+#' @examples
+#' tree <- ape::read.tree(text = "(tA,(tB,(tC,tD)));")
+#' tree <- ape::compute.brlen(tree)
+#' trait <- c("b", "a", "a", "a")
+#' names(trait) <- tree$tip.label
+#' trait_heritage(tree, trait, generation_time = 0.2)
 trait_heritage = function(tree, trait, generation_time){
 
   ## Tests
@@ -55,9 +62,15 @@ trait_heritage = function(tree, trait, generation_time){
 #' @param generation_time how frequently the trait probability should be calculated. Must be less than the height of the phylogeny.
 #' @param condition the trait state to condition on (default 1)
 #'
-#' @return a list containing two dataframes. by_trait contains the probability calculation at each timestep for each level of the trait. summary shows the probability across trait values for each time step.
+#' @return a list containing two dataframes. by_trait contains the probability
+#'   calculation at each timestep for each level of the trait. summary shows
+#'   the probability across trait values for each time step.
 #' @export
-#'
+#' @examples
+#' tree <- ape::read.tree(text = "((tA:0.2,tX:0.2):0.8,(tB:0.65,(tC:0.3,tD:0.3):0.35):0.35);")
+#' trait <- c("b", "b", "b", "a", "a")
+#' names(trait) <- tree$tip.label
+#' trait_heritage_specific(tree, trait, generation_time = 0.2, condition = "a")
 trait_heritage_specific = function(tree, trait, generation_time, condition = 1){
 
   ## Tests

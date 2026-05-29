@@ -13,8 +13,8 @@ License: GPL (>= 3)
 URL: https://github.com/SamPassmore/traitheritage
 BugReports: https://github.com/SamPassmore/traitheritage/issues
 Encoding: UTF-8
+LazyData: false
 Suggests:
-    geosphere,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports:

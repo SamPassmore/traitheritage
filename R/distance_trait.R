@@ -1,5 +1,23 @@
-# ## Distance function
-
+#' Calculate the probability of taxa being within a distance threshold
+#'
+#'@description
+#'This function is still under development.
+#'
+#' @param tree a phylogenetic tree of class phylo
+#' @param distance_matrix a n by n matrix of distances between all taxa
+#' @param generation_time the number of generations to calculate the probability for across the phylogeny
+#' @param cut_off the distance cut-off value; pairs below this value are treated as "close"
+#'
+#' @return a data.table showing the probability of taxa being within the
+#'   distance threshold at each generation
+#' @export
+#' @examples
+#' tree <- ape::read.tree(text = "(tA,(tB,(tC,tD)));")
+#' tree <- ape::compute.brlen(tree)
+#' coords <- matrix(c(1,2, 1,2, 5,6, 6,5), byrow = TRUE, ncol = 2,
+#'   dimnames = list(tree$tip.label, c("X", "Y")))
+#' distance_matrix <- as.matrix(dist(coords))
+#' distance_trait_heritage(tree, distance_matrix, generation_time = 0.2, cut_off = 5)
 distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_off){
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
   if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance matrix. Ensure row and column names are set.")

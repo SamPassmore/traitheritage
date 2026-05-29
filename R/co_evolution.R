@@ -16,9 +16,19 @@
 #' @param generation_time the number of generations to calculate the probability for across the phylogeny
 #' @param cut_off The distance cut off value (used to discretize distance)
 #'
-#' @return a list. time_df shows the probability for each paired category over time. pairs_df shows the data for each viable pair in the dataset.
-#' @keywords internal
-#'
+#' @return a list. time_df shows the probability for each paired category over
+#'   time. pairs_df shows the data for each viable pair in the dataset.
+#' @export
+#' @examples
+#' tree <- ape::read.tree(text =
+#'   "((tA:1.16,tB:1.16):0.44,((tC:0.20,tD:0.20):0.18,tE:0.39):1.22);")
+#' tree <- ape::compute.brlen(tree)
+#' trait <- c("b", "b", "a", "a", "a")
+#' names(trait) <- tree$tip.label
+#' coords <- matrix(c(1,2, 1,2, 2,1, 5,6, 6,5), byrow = TRUE, ncol = 2,
+#'   dimnames = list(tree$tip.label, c("X", "Y")))
+#' distance_matrix <- as.matrix(dist(coords))
+#' trait_coevolution(tree, trait, distance_matrix, generation_time = 0.2, cut_off = 3)
 trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_off){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
@@ -118,6 +128,31 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
 }
 
 
+#' Permutation test for trait co-evolution
+#'
+#' @param tree a phylogenetic tree of class phylo
+#' @param trait a numeric or character trait for each taxa
+#' @param distance_matrix a n by n matrix of distances between all taxa
+#' @param generation_time the number of generations to calculate the probability for across the phylogeny
+#' @param cut_off the distance cut-off value (used to discretize distance)
+#' @param n_permutations the number of permutations to run (default = 100)
+#' @param seed random seed for reproducibility (default = 937)
+#'
+#' @return a list with by_trait and summary data.tables of permuted probabilities
+#' @export
+#' @examples
+#' \donttest{
+#' tree <- ape::read.tree(text =
+#'   "((tA:1.16,tB:1.16):0.44,((tC:0.20,tD:0.20):0.18,tE:0.39):1.22);")
+#' tree <- ape::compute.brlen(tree)
+#' trait <- c("b", "b", "a", "a", "a")
+#' names(trait) <- tree$tip.label
+#' coords <- matrix(c(1,2, 1,2, 2,1, 5,6, 6,5), byrow = TRUE, ncol = 2,
+#'   dimnames = list(tree$tip.label, c("X", "Y")))
+#' distance_matrix <- as.matrix(dist(coords))
+#' trait_coevolution_permutation(tree, trait, distance_matrix,
+#'   generation_time = 0.2, cut_off = 3, n_permutations = 5)
+#' }
 trait_coevolution_permutation = function(tree, trait, distance_matrix, generation_time, cut_off, n_permutations = 100, seed = 937){
   set.seed(seed)
   # Permuted results
@@ -140,6 +175,29 @@ trait_coevolution_permutation = function(tree, trait, distance_matrix, generatio
 }
 
 
+#' Calculate the relative probability of a shared trait condition and distance
+#'
+#' @param tree a phylogenetic tree of class phylo
+#' @param trait a numeric or character trait for each taxa
+#' @param distance_matrix a n by n matrix of distances between all taxa
+#' @param generation_time the number of generations to calculate the probability for across the phylogeny
+#' @param cut_off the distance cut-off value (used to discretize distance)
+#' @param condition the trait state to condition on
+#'
+#' @return a list. time_df shows the probability for each paired category over
+#'   time. pairs_df shows the data for each viable pair in the dataset.
+#' @export
+#' @examples
+#' tree <- ape::read.tree(text =
+#'   "((tA:1.16,tB:1.16):0.44,((tC:0.20,tD:0.20):0.18,tE:0.39):1.22);")
+#' tree <- ape::compute.brlen(tree)
+#' trait <- c("b", "b", "a", "a", "a")
+#' names(trait) <- tree$tip.label
+#' coords <- matrix(c(1,2, 1,2, 2,1, 5,6, 6,5), byrow = TRUE, ncol = 2,
+#'   dimnames = list(tree$tip.label, c("X", "Y")))
+#' distance_matrix <- as.matrix(dist(coords))
+#' trait_coevolution_specific(tree, trait, distance_matrix,
+#'   generation_time = 0.2, cut_off = 3, condition = "a")
 trait_coevolution_specific = function(tree, trait, distance_matrix, generation_time, cut_off, condition){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
@@ -244,6 +302,32 @@ trait_coevolution_specific = function(tree, trait, distance_matrix, generation_t
 }
 
 
+#' Permutation test for trait co-evolution with a specific condition
+#'
+#' @param tree a phylogenetic tree of class phylo
+#' @param trait a numeric or character trait for each taxa
+#' @param distance_matrix a n by n matrix of distances between all taxa
+#' @param generation_time the number of generations to calculate the probability for across the phylogeny
+#' @param cut_off the distance cut-off value (used to discretize distance)
+#' @param condition the trait state to condition on
+#' @param n_permutations the number of permutations to run
+#' @param seed random seed for reproducibility (default = 9872)
+#'
+#' @return a list with by_trait and summary data.tables of permuted probabilities
+#' @export
+#' @examples
+#' \donttest{
+#' tree <- ape::read.tree(text =
+#'   "((tA:1.16,tB:1.16):0.44,((tC:0.20,tD:0.20):0.18,tE:0.39):1.22);")
+#' tree <- ape::compute.brlen(tree)
+#' trait <- c("b", "b", "a", "a", "a")
+#' names(trait) <- tree$tip.label
+#' coords <- matrix(c(1,2, 1,2, 2,1, 5,6, 6,5), byrow = TRUE, ncol = 2,
+#'   dimnames = list(tree$tip.label, c("X", "Y")))
+#' distance_matrix <- as.matrix(dist(coords))
+#' trait_coevolution_permutation_specific(tree, trait, distance_matrix,
+#'   generation_time = 0.2, cut_off = 3, condition = "a", n_permutations = 5)
+#' }
 trait_coevolution_permutation_specific = function(tree,
                                                   trait,
                                                   distance_matrix,
@@ -255,9 +339,9 @@ trait_coevolution_permutation_specific = function(tree,
 
   set.seed(seed)
   # Permuted results
-  permuted_list = lapply(1:n_permutations, function(i){
+  permuted_list = lapply(seq_len(n_permutations), function(i){
     p_trait = trait
-    names(p_trait) = names(p_trait)[sample(1:length(p_trait))]
+    names(p_trait) = names(p_trait)[sample(seq_along(p_trait))]
     trait_coevolution_specific(tree, p_trait, distance_matrix, generation_time, cut_off, condition)
   })
 
