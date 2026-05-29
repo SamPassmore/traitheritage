@@ -10,10 +10,10 @@
 #'This function is still under development
 #'
 #'
-#' @param tree a phylogenetic tree of classe phylo
+#' @param tree a phylogenetic tree of class phylo
 #' @param trait a numeric or character trait for each taxa
 #' @param distance_matrix a n by n matrix of distances between all taxa
-#' @param generation_time the number of generations to calculate the probaiblity for across the phylogeny
+#' @param generation_time the number of generations to calculate the probability for across the phylogeny
 #' @param cut_off The distance cut off value (used to discretize distance)
 #'
 #' @return a list. time_df shows the probability for each paired category over time. pairs_df shows the data for each viable pair in the dataset.
@@ -22,8 +22,8 @@
 trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_off){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
-  if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
-  if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
+  if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance matrix. Ensure row and column names are set.")
+  if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance matrix. Ensure row and column names are set.")
   if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
   # # clades sets at each node
@@ -118,33 +118,33 @@ trait_coevolution = function(tree, trait, distance_matrix, generation_time, cut_
 }
 
 
-trait_coevolution_permutation =  function(tree, trait, distance_matrix, generation_time, cut_off, n_permutation){
+trait_coevolution_permutation = function(tree, trait, distance_matrix, generation_time, cut_off, n_permutations = 100, seed = 937){
   set.seed(seed)
   # Permuted results
-  permuted_list = lapply(1:n_permutations, function(i){
+  permuted_list = lapply(seq_len(n_permutations), function(i){
     p_trait = trait
-    names(p_trait) = names(p_trait)[sample(1:length(p_trait))]
+    names(p_trait) = names(p_trait)[sample(seq_along(p_trait))]
     trait_coevolution(tree, p_trait, distance_matrix, generation_time, cut_off)
   })
 
   by_trait = lapply(permuted_list, "[[", 1)
   p_summary = lapply(permuted_list, "[[", 2)
 
-  names(by_trait) = paste0("p_", 1:n_permutations)
-  names(p_summary) = paste0("p_", 1:n_permutations)
+  names(by_trait) = paste0("p_", seq_len(n_permutations))
+  names(p_summary) = paste0("p_", seq_len(n_permutations))
 
   permuted_bytrait = data.table::rbindlist(by_trait, idcol = "iteration")
   permuted_summary = data.table::rbindlist(p_summary, idcol = "iteration")
 
   return(list(by_trait = permuted_bytrait, summary = permuted_summary))
-  }
+}
 
 
 trait_coevolution_specific = function(tree, trait, distance_matrix, generation_time, cut_off, condition){
 
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
-  if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
-  if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
+  if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance matrix. Ensure row and column names are set.")
+  if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance matrix. Ensure row and column names are set.")
   if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
 

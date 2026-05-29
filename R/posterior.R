@@ -6,7 +6,7 @@
 #' @param trait A named vector of trait values. Names should match taxa
 #' @param generation_time A numeric value indicating how many equal cuts to make in the tree
 #'
-#' @return a Dataframe showing the probability of a shared trait for each generation, witihn each tree
+#' @return a data frame showing the probability of a shared trait for each generation, within each tree
 #' @export
 #'
 
@@ -18,9 +18,9 @@ posterior_trait_heritage = function(trees, trait, generation_time){
     )
 
   output = lapply(trees, function(t){
-    trait_heritage(tree = t, trait = trait, generation_time = generation_time)
+    trait_heritage(tree = t, trait = trait, generation_time = generation_time)$summary
   })
-  names(output) = 1:length(trees)
+  names(output) = seq_along(trees)
 
   dplyr::bind_rows(output, .id = "posterior")
 }

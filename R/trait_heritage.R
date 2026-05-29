@@ -53,6 +53,7 @@ trait_heritage = function(tree, trait, generation_time){
 #' @param tree a single phylogeny
 #' @param trait a vector of traits, named for each taxa
 #' @param generation_time how frequently the trait probability should be calculated. Must be less than the height of the phylogeny.
+#' @param condition the trait state to condition on (default 1)
 #'
 #' @return a list containing two dataframes. by_trait contains the probability calculation at each timestep for each level of the trait. summary shows the probability across trait values for each time step.
 #' @export

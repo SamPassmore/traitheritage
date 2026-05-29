@@ -4,7 +4,7 @@
 #' Calculate within and between variance for a trait in a tree
 #'
 #' @param tree a phylogenetic tree
-#' @param generation_time the generation time to calcualte across the phylogeny
+#' @param generation_time the generation time to calculate across the phylogeny
 #' @param trait the trait of interest (numeric or character)
 #'
 

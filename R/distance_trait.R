@@ -2,8 +2,8 @@
 
 distance_trait_heritage = function(tree, distance_matrix, generation_time, cut_off){
   if(any(is.na(distance_matrix))) stop("Taxa with missing values should be removed from the analysis and the tree")
-  if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
-  if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance maxtrix. Ensure row and column names are set.")
+  if(!all(tree$tip.label %in% rownames(distance_matrix))) stop("All taxa must match with a row in the distance matrix. Ensure row and column names are set.")
+  if(!all(tree$tip.label %in% colnames(distance_matrix))) stop("All taxa must match with a row in the distance matrix. Ensure row and column names are set.")
   if(max(ape::node.depth.edgelength(tree))/generation_time <= 2) stop("You must make more than one cut in the tree.")
 
   dp_df = .get_hierarchy(tree)

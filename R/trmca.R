@@ -69,7 +69,7 @@
 
 tmrca = function(trees, states, progress = TRUE){
 
-  if(!class(trees) %in% c("phylo", "multiPhylo")){
+  if(!inherits(trees, c("phylo", "multiPhylo"))){
     stop("trees must be a phylo or multiPhylo class")
   }
 

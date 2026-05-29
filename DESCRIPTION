@@ -1,18 +1,23 @@
 Package: traitheritage
 Type: Package
-Title: TraitHeritage
+Title: Inferential Methods for Phylogenetic Trait Heritage
 Version: 0.1.0
-Author: Sam Passmore
-Maintainer: Sam Passmore <u1123115@anu.edu.au>
-Description: Inferential methods for calculating the phylogenetic heritage of taxa traits. 
+Authors@R: person("Sam", "Passmore", email = "u1123115@anu.edu.au",
+    role = c("aut", "cre"))
+Description: Provides inferential methods for calculating the phylogenetic
+    heritage of taxa traits. Functions estimate the probability that pairs of
+    taxa share a trait as a function of their shared evolutionary history,
+    support co-evolution analyses combining trait similarity and geographic
+    distance, and can be applied across posterior samples of phylogenetic trees.
 License: GPL (>= 3)
+URL: https://github.com/SamPassmore/traitheritage
+BugReports: https://github.com/SamPassmore/traitheritage/issues
 Encoding: UTF-8
-LazyData: true
-Suggests: 
+Suggests:
     geosphere,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Imports: 
+Imports:
     ape,
     caper,
     data.table,
